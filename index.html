@@ -31,7 +31,7 @@
                 <div class="w-10 h-10 bg-accentblue text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-md shadow-sky-200">B</div>
                 <div>
                     <h1 class="text-base font-bold text-slate-900 tracking-tight">BJEK POS SYSTEM</h1>
-                    <p class="text-[10px] text-slate-500 font-mono">Kasir Digital Modern v2.5</p>
+                    <p class="text-[10px] text-slate-500 font-mono">Kasir Digital Modern v2.6</p>
                 </div>
             </div>
             
@@ -199,7 +199,6 @@
         <div id="view-laporan" class="hidden space-y-6">
             <!-- Ringkasan Finansial Modern -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Box Omset Total (Dipecah menjadi Cash & QRIS) -->
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-between shadow-sm space-y-3">
                     <div class="flex items-center justify-between">
                         <div>
@@ -210,7 +209,6 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                         </div>
                     </div>
-                    <!-- Pemisahan Nominal Pembayaran -->
                     <div class="pt-2 border-t border-slate-100 grid grid-cols-2 text-[11px] font-mono text-slate-600">
                         <div>Tunai/Cash: <span id="report-cash-income" class="block font-bold text-slate-800">Rp 0</span></div>
                         <div class="border-l border-slate-200 pl-3">QRIS Pay: <span id="report-qris-income" class="block font-bold text-accentblue">Rp 0</span></div>
@@ -245,35 +243,47 @@
                 </div>
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                     <button onclick="exportTodayToWhatsApp()" class="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow transition active:scale-95">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                         Kirim Rekap ke WA
                     </button>
                     <button onclick="exportTodayToPDF()" class="flex-1 sm:flex-initial px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow transition active:scale-95">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9v4a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                         Cetak PDF Harian
                     </button>
                 </div>
             </div>
 
-            <!-- Jurnal Kas Masuk & Keluar -->
+            <!-- Jurnal Kas & MENU TERLARIS -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 h-fit space-y-4 shadow-sm">
-                    <h4 class="text-sm font-bold text-slate-800">Catat Pengeluaran Baru</h4>
-                    <form onsubmit="handleCreateExpense(event)" class="space-y-3 text-xs">
-                        <div>
-                            <label class="block text-slate-600 mb-1">Keperluan / Deskripsi</label>
-                            <input type="text" id="exp-desc" required placeholder="Contoh: Beli es batu, gas elpiji" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-rose-500">
+                <!-- Sisi Kiri: Tambah Pengeluaran & Menu Terlaris -->
+                <div class="space-y-6">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 h-fit space-y-4 shadow-sm">
+                        <h4 class="text-sm font-bold text-slate-800">Catat Pengeluaran Baru</h4>
+                        <form onsubmit="handleCreateExpense(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-600 mb-1">Keperluan / Deskripsi</label>
+                                <input type="text" id="exp-desc" required placeholder="Contoh: Beli es batu, gas elpiji" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-rose-500">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 mb-1">Nominal Biaya (Rp)</label>
+                                <input type="number" id="exp-amount" required placeholder="50000" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono focus:outline-none focus:border-rose-500">
+                            </div>
+                            <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl transition shadow">
+                                Simpan Pengeluaran
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- WIDGET BARU: MENU TERLARIS HARI INI -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 h-fit space-y-3 shadow-sm">
+                        <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span>🔥 Menu Terjual Hari Ini</span>
+                        </h4>
+                        <div id="top-products-container" class="space-y-2 max-h-48 overflow-y-auto text-xs font-mono">
+                            <!-- Diisi Otomatis via JS -->
                         </div>
-                        <div>
-                            <label class="block text-slate-600 mb-1">Nominal Biaya (Rp)</label>
-                            <input type="number" id="exp-amount" required placeholder="50000" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono focus:outline-none focus:border-rose-500">
-                        </div>
-                        <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl transition shadow">
-                            Simpan Pengeluaran
-                        </button>
-                    </form>
+                    </div>
                 </div>
 
+                <!-- Sisi Kanan: Tabel Mutasi Finansial -->
                 <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-sm">
                     <div class="flex justify-between items-center">
                         <h4 class="text-sm font-bold text-slate-800">Arsip Histori Mutasi Keuangan</h4>
@@ -371,7 +381,6 @@
             return "Rp " + new Intl.NumberFormat("id-ID").format(num);
         }
 
-        // === ENGINE KASIR & LOGIKA METODE PEMBAYARAN ===
         function handlePaymentMethodChange() {
             const method = document.getElementById("payment-method").value;
             const cashInput = document.getElementById("cash-input");
@@ -520,6 +529,7 @@
                 subtotal: data.subtotal, discount: data.disc, total: data.total, cash: data.cash, change: data.change, method: data.method
             };
 
+            // PERBAIKAN: Menyimpan snapshot item belanja ke dalam database log
             financialLogs.unshift({
                 id: Date.now(), 
                 date: currentDateStr,
@@ -527,7 +537,8 @@
                 desc: `Penjualan Kasir (${invoiceId})`, 
                 type: 'Pemasukan', 
                 method: data.method, 
-                amount: data.total
+                amount: data.total,
+                items: cart.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price }))
             });
             syncStorage();
 
@@ -566,14 +577,14 @@
 
         function exportToWhatsApp() {
             if (!activeCheckoutData) return;
-            let msg = `*BJEK POS SYSTEM - NOTA BELANJA*%0A`;
-            msg += `Invoice: \`${activeCheckoutData.invoice}\` (${activeCheckoutData.method})%0A`;
-            msg += `============================%0A`;
-            activeCheckoutData.items.forEach(i => { msg += `- *${i.product.name}* (x${i.quantity}) : ${formatRupiah(i.product.price * i.quantity)}%0A`; });
-            msg += `============================%0A`;
-            msg += `*TOTAL AKHIR:* *${formatRupiah(activeCheckoutData.total)}*%0A`;
+            let msg = `*BJEK POS SYSTEM - NOTA BELANJA*\n`;
+            msg += `Invoice: \`${activeCheckoutData.invoice}\` (${activeCheckoutData.method})\n`;
+            msg += `============================\n`;
+            activeCheckoutData.items.forEach(i => { msg += `- *${i.product.name}* (x${i.quantity}) : ${formatRupiah(i.product.price * i.quantity)}\n`; });
+            msg += `============================\n`;
+            msg += `*TOTAL AKHIR:* *${formatRupiah(activeCheckoutData.total)}*\n`;
             msg += `_Terima kasih telah berbelanja!_`;
-            window.open(`https://wa.me/?text=${msg}`, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         function exportToPDF() {
@@ -595,7 +606,6 @@
             window.print();
         }
 
-        // === ENGINE KELOLA DAFTAR MENU ===
         function renderManagementTable() {
             const tbody = document.getElementById("management-table-body");
             tbody.innerHTML = "";
@@ -630,10 +640,30 @@
             products = products.filter(p => p.id !== productId); syncStorage(); renderManagementTable();
         }
 
-        // === ENGINE LAPORAN FINANSIAL & REKAP HARIAN ===
+        // ======================= ENGINE REKAP KEUANGAN & PERBAIKAN REKAP HARIAN =======================
+        
+        // Fungsi pembantu mengakulasi daftar menu yang terjual sepanjang hari ini
+        function getTodayCalculatedItems(todayStr) {
+            const todayLogs = financialLogs.filter(log => log.date === todayStr);
+            let summaryItems = {};
+            todayLogs.forEach(log => {
+                if (log.items && log.type === 'Pemasukan') {
+                    log.items.forEach(item => {
+                        if (summaryItems[item.name]) {
+                            summaryItems[item.name] += item.quantity;
+                        } else {
+                            summaryItems[item.name] = item.quantity;
+                        }
+                    });
+                }
+            });
+            return summaryItems;
+        }
+
         function renderFinancialView() {
             let totalIncome = 0, totalExpense = 0;
             let cashIncome = 0, qrisIncome = 0;
+            const todayStr = new Date().toLocaleDateString('id-ID');
 
             const tbody = document.getElementById("financial-table-body");
             tbody.innerHTML = "";
@@ -665,6 +695,23 @@
             document.getElementById("report-expense").innerText = formatRupiah(totalExpense);
             document.getElementById("report-net").innerText = formatRupiah(net);
             document.getElementById("report-net").className = net < 0 ? "text-xl font-bold font-mono text-rose-600 mt-1" : "text-xl font-bold font-mono text-accentblue mt-1";
+
+            // Render daftar kuantitas menu terlaris hari ini pada layar dashboard laporan
+            const topContainer = document.getElementById("top-products-container");
+            topContainer.innerHTML = "";
+            const todayItems = getTodayCalculatedItems(todayStr);
+            const itemKeys = Object.keys(todayItems);
+
+            if (itemKeys.length === 0) {
+                topContainer.innerHTML = `<div class="text-slate-400 py-2 text-center text-[11px]">Belum ada item terjual hari ini.</div>`;
+            } else {
+                itemKeys.forEach(name => {
+                    const div = document.createElement("div");
+                    div.className = "flex justify-between items-center bg-slate-50 border border-slate-200 p-2 rounded-lg";
+                    div.innerHTML = `<span class="text-slate-700 font-medium">${name}</span><span class="bg-sky-100 text-sky-700 font-bold px-2 py-0.5 rounded text-[10px]">x${todayItems[name]} Porsi</span>`;
+                    topContainer.appendChild(div);
+                });
+            }
         }
 
         function handleCreateExpense(e) {
@@ -685,7 +732,7 @@
             renderFinancialView(); alert("Pengeluaran berhasil dicatat!");
         }
 
-        // 🟢 EKSPOR REKAP HARIAN KE WHATSAPP
+        // 🟢 PERBAIKAN: EKSPOR REKAP HARIAN KE WHATSAPP (Anti-Bug & Input Menu Terjual)
         function exportTodayToWhatsApp() {
             const todayStr = new Date().toLocaleDateString('id-ID');
             const todayLogs = financialLogs.filter(log => log.date === todayStr);
@@ -702,36 +749,50 @@
             });
             const net = totalIncome - totalExpense;
 
-            let msg = `*REKAP TOTAL PEMBELIAN & FINANSIAL BJEK HARI INI*%0A`;
-            msg += `Tanggal Laporan: ${todayStr}%0A`;
-            msg += `============================%0A`;
-            msg += `*1. TOTAL OMSET:* ${formatRupiah(totalIncome)}%0A`;
-            msg += `   - Nominal Tunai/Cash: ${formatRupiah(cashIncome)}%0A`;
-            msg += `   - Nominal QRIS Pay: ${formatRupiah(qrisIncome)}%0A`;
-            msg += `*2. TOTAL PENGELUARAN:* ${formatRupiah(totalExpense)}%0A`;
-            msg += `============================%0A`;
-            msg += `*LABA KAS BERSIH:* *${formatRupiah(net)}*%0A%0A`;
-            msg += `_Daftar Mutasi Penjualan & Pengeluaran:_%0A`;
+            let msg = `*REKAP TOTAL PEMBELIAN & FINANSIAL BJEK HARI INI*\n`;
+            msg += `Tanggal Laporan: ${todayStr}\n`;
+            msg += `============================\n`;
+            msg += `*1. TOTAL OMSET:* ${formatRupiah(totalIncome)}\n`;
+            msg += `   - Nominal Tunai/Cash: ${formatRupiah(cashIncome)}\n`;
+            msg += `   - Nominal QRIS Pay: ${formatRupiah(qrisIncome)}\n`;
+            msg += `*2. TOTAL PENGELUARAN:* ${formatRupiah(totalExpense)}\n`;
+            msg += `============================\n`;
+            msg += `*LABA KAS BERSIH:* *${formatRupiah(net)}*\n\n`;
+            
+            // Tambahan list menu terjual biar tidak bingung di WA
+            msg += `*📦 QUANTITY MENU TERJUAL HARI INI:*\n`;
+            const todayItems = getTodayCalculatedItems(todayStr);
+            const itemKeys = Object.keys(todayItems);
+            if (itemKeys.length === 0) {
+                msg += `(Belum ada produk kuliner terjual)\n`;
+            } else {
+                itemKeys.forEach(name => {
+                    msg += `- ${name} : (x${todayItems[name]} porsi)\n`;
+                });
+            }
+            msg += `\n_Daftar Mutasi Penjualan & Pengeluaran:_\n`;
             
             if (todayLogs.length === 0) {
-                msg += `(Belum ada data transaksi untuk hari ini)%0A`;
+                msg += `(Belum ada data transaksi untuk hari ini)\n`;
             } else {
                 todayLogs.forEach(log => {
                     const sign = log.type === 'Pemasukan' ? '📈 Masuk' : '📉 Keluar';
                     const meth = log.type === 'Pemasukan' ? ` (${log.method || 'Cash'})` : '';
-                    msg += `- [${log.time}] ${sign} - ${log.desc}${meth}: *${formatRupiah(log.amount)}*%0A`;
+                    msg += `- [${log.time}] ${sign} - ${log.desc}${meth}: *${formatRupiah(log.amount)}*\n`;
                 });
             }
-            window.open(`https://wa.me/?text=${msg}`, '_blank');
+            
+            // Menggunakan encodeURIComponent terbungkus utuh agar bebas dari bug string kosong di WhatsApp
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
-        // 🔵 CETAK REKAP HARIAN KE PRINTER / PDF DOCUMENT
+        // 🔵 PERBAIKAN: CETAK REKAP HARIAN KE PDF (Ditambahkan List Menu Makanan Agar Tidak Bingung)
         function exportTodayToPDF() {
             const todayStr = new Date().toLocaleDateString('id-ID');
             const todayLogs = financialLogs.filter(log => log.date === todayStr);
             
             let totalIncome = 0, cashIncome = 0, qrisIncome = 0, totalExpense = 0;
-            let rowsHtml = "";
+            let logRowsHtml = "";
             
             todayLogs.forEach(log => {
                 if (log.type === 'Pemasukan') {
@@ -745,7 +806,7 @@
                 const sign = log.type === 'Pemasukan' ? '+' : '-';
                 const color = log.type === 'Pemasukan' ? 'color: #10b981;' : 'color: #ef4444;';
                 
-                rowsHtml += `<tr style="border-bottom: 1px solid #e2e8f0;">
+                logRowsHtml += `<tr style="border-bottom: 1px solid #e2e8f0;">
                     <td style="padding: 6px; text-align: left;">${log.time}</td>
                     <td style="padding: 6px; text-align: left; font-family: sans-serif;">${log.desc}</td>
                     <td style="padding: 6px; text-align: center;">${methodLabel}</td>
@@ -753,6 +814,22 @@
                 </tr>`;
             });
             const net = totalIncome - totalExpense;
+
+            // Generate baris untuk tabel baru menu makanan terjual
+            let itemRowsHtml = "";
+            const todayItems = getTodayCalculatedItems(todayStr);
+            const itemKeys = Object.keys(todayItems);
+            
+            if (itemKeys.length === 0) {
+                itemRowsHtml = `<tr><td colspan="2" style="text-align: center; padding: 6px; color:#888;">Belum ada menu kuliner yang terjual</td></tr>`;
+            } else {
+                itemKeys.forEach(name => {
+                    itemRowsHtml += `<tr style="border-bottom: 1px dashed #cbd5e1;">
+                        <td style="padding: 6px; text-align: left; font-weight: 500;">${name}</td>
+                        <td style="padding: 6px; text-align: right; font-weight: bold; color: #0ea5e9;">x${todayItems[name]} Porsi</td>
+                    </tr>`;
+                });
+            }
 
             const printArea = document.getElementById("print-receipt-area");
             printArea.innerHTML = `
@@ -766,8 +843,24 @@
                         <tr><td>Total Biaya Kas</td><td>: <b>${formatRupiah(totalExpense)}</b></td></tr>
                         <tr style="font-size: 13px;"><td><b>Laba Kas Bersih</b></td><td>: <b>${formatRupiah(net)}</b></td></tr>
                     </table>
+                    
+                    <!-- TABEL TAMBAHAN BARU: ITEM MENU TERJUAL AGAR TIDAK BINGUNG -->
                     <hr style="border-top: 1px dashed black;">
-                    <h4 style="margin: 8px 0 4px 0; font-family: sans-serif;">Rincian Log Pembelian/Mutasi:</h4>
+                    <h4 style="margin: 8px 0 4px 0; font-family: sans-serif; color:#0f172a;">📦 Kuantitas Menu Terjual Hari Ini:</h4>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px;">
+                        <thead>
+                            <tr style="background: #f1f5f9; border-bottom: 1px solid #94a3b8;">
+                                <th style="padding: 5px; text-align: left;">Nama Produk / Menu</th>
+                                <th style="padding: 5px; text-align: right;">Total Kuantitas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemRowsHtml}
+                        </tbody>
+                    </table>
+
+                    <hr style="border-top: 1px dashed black;">
+                    <h4 style="margin: 8px 0 4px 0; font-family: sans-serif;">Rincian Log Pembelian/Mutasi Kas:</h4>
                     <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
                         <thead>
                             <tr style="background: #f1f5f9; border-bottom: 1px solid black;">
@@ -778,7 +871,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${rowsHtml || '<tr><td colspan="4" style="text-align:center; padding: 10px;">Belum ada log transaksi hari ini</td></tr>'}
+                            ${logRowsHtml || '<tr><td colspan="4" style="text-align:center; padding: 10px;">Belum ada log transaksi hari ini</td></tr>'}
                         </tbody>
                     </table>
                     <hr style="border-top: 1px dashed black; margin-top: 15px;">
