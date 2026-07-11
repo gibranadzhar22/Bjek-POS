@@ -13,7 +13,7 @@
                         darkbg: '#f8fafc',    // Latar belakang putih abu-abu (Slate 50)
                         darkcard: '#ffffff',  // Kartu putih bersih
                         darkinput: '#f1f5f9', // Kolom input abu-abu terang (Slate 100)
-                        accentneon: '#0891b2', // Cyan gelap agar kontras di latar putih
+                        accentneon: '#0891b2', // Cyan kontras tinggi
                         accentblue: '#2563eb'  // Biru terang modern
                     }
                 }
@@ -36,7 +36,7 @@
         }
     </style>
 </head>
-<body class="bg-darkbg text-slate-800 font-sans min-h-screen flex flex-col selection:bg-accentneon selection:text-white">
+<body class="bg-darkbg text-slate-800 font-sans min-h-screen flex flex-col selection:bg-accentblue selection:text-white">
 
     <header class="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-40 px-6 py-3 flex flex-wrap justify-between items-center gap-4 no-print shadow-sm">
         <div class="flex items-center space-x-3">
@@ -52,14 +52,17 @@
         </div>
 
         <nav class="flex space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-            <button onclick="switchTab('kasir')" id="tab-btn-kasir" class="px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 bg-accentblue text-white shadow">
-                🛒 Mesin Kasir
+            <button onclick="switchTab('kasir')" id="tab-btn-kasir" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 bg-accentblue text-white shadow">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                Mesin Kasir
             </button>
-            <button onclick="switchTab('kelola')" id="tab-btn-kelola" class="px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
-                🍔 Kelola Menu
+            <button onclick="switchTab('kelola')" id="tab-btn-kelola" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                Kelola Menu
             </button>
-            <button onclick="switchTab('laporan')" id="tab-btn-laporan" class="px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
-                📊 Keuangan & Laporan
+            <button onclick="switchTab('laporan')" id="tab-btn-laporan" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0h5a2 2 0 002-2v-3a2 2 0 00-2-2h-5m5 13v-3a2 2 0 00-2-2h-2a2 2 0 00-2 2v3a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
+                Keuangan & Laporan
             </button>
         </nav>
 
@@ -80,7 +83,7 @@
                             class="w-full bg-darkinput border border-slate-200 rounded-xl pl-9 pr-4 py-1.5 text-sm text-slate-800 focus:outline-none focus:border-accentblue">
                     </div>
                     <div class="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-                        <button onclick="filterCategory('Semua')" class="cat-btn px-3 py-1 text-xs font-bold rounded-lg bg-accentneon text-white border border-transparent transition">Semua</button>
+                        <button onclick="filterCategory('Semua')" class="cat-btn px-3 py-1 text-xs font-bold rounded-lg bg-accentblue text-white border border-transparent transition">Semua</button>
                         <button onclick="filterCategory('Makanan')" class="cat-btn px-3 py-1 text-xs font-medium rounded-lg bg-darkinput text-slate-600 border border-slate-200 hover:border-slate-300 transition">Makanan</button>
                         <button onclick="filterCategory('Minuman')" class="cat-btn px-3 py-1 text-xs font-medium rounded-lg bg-darkinput text-slate-600 border border-slate-200 hover:border-slate-300 transition">Minuman</button>
                         <button onclick="filterCategory('Cemilan')" class="cat-btn px-3 py-1 text-xs font-medium rounded-lg bg-darkinput text-slate-600 border border-slate-200 hover:border-slate-300 transition">Cemilan</button>
@@ -274,7 +277,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <h3 class="text-base font-bold text-slate-800">Transaksi Sukses!</h3>
-                <p class="text-[10px] text-slate-500">Silahkan pilih metode pengiriman nota Bjek</p>
+                <p class="text-[10px] text-slate-500">Silahkan pilih metode penyerahan nota pelanggan</p>
             </div>
 
             <div id="manifest-summary" class="bg-slate-50 p-3 rounded-xl font-mono text-xs text-slate-800 space-y-1.5 border border-slate-200 mb-4">
@@ -297,7 +300,7 @@
     <div id="print-receipt-area" class="hidden"></div>
 
     <script>
-        // Data Default POS Menu awal
+        // Database Lokal Awal Produk (Default)
         const defaultProducts = [
             { id: 1, name: "Es Kopi Aren Premium", price: 18000, category: "Minuman", image: "" },
             { id: 2, name: "Matcha Latte Ice", price: 22000, category: "Minuman", image: "" },
@@ -321,10 +324,12 @@
             const tabs = ['kasir', 'kelola', 'laporan'];
             tabs.forEach(t => {
                 document.getElementById(`view-${t}`).classList.add('hidden');
-                document.getElementById(`tab-btn-${t}`).className = "px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900";
+                document.getElementById(`tab-btn-${t}`).className = "flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900";
             });
             document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-btn-${tabName}`).className = "px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 bg-accentblue text-white shadow";
+            
+            let activeColor = "flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 bg-accentblue text-white shadow";
+            document.getElementById(`tab-btn-${tabName}`).className = activeColor;
             
             if (tabName === 'kasir') renderProductsGrid();
             if (tabName === 'kelola') renderManagementTable();
@@ -379,7 +384,7 @@
             activeCategory = cat;
             document.querySelectorAll(".cat-btn").forEach(btn => {
                 if (btn.innerText === cat) {
-                    btn.className = "cat-btn px-3 py-1 text-xs font-bold rounded-lg bg-accentneon text-white border border-transparent transition";
+                    btn.className = "cat-btn px-3 py-1 text-xs font-bold rounded-lg bg-accentblue text-white border border-transparent transition";
                 } else {
                     btn.className = "cat-btn px-3 py-1 text-xs font-medium rounded-lg bg-darkinput text-slate-600 border border-slate-200 hover:border-slate-300 transition";
                 }
@@ -504,7 +509,7 @@
             clearCart();
         }
 
-        // === EKSPOR WHATSAPP & PDF ===
+        // === EKSPOR NOTA (WHATSAPP & PRINTER WINDOW) ===
         function exportToWhatsApp() {
             if (!activeCheckoutData) return;
             let msg = `*BJEK POS SYSTEM - NOTA BELANJA*%0A`;
@@ -543,7 +548,7 @@
             window.print();
         }
 
-        // === ENGINE TAB 2: KELOLA MENU ===
+        // === ENGINE TAB 2: MANAGEMENT DAFTAR MENU ===
         function renderManagementTable() {
             const tbody = document.getElementById("management-table-body");
             tbody.innerHTML = "";
@@ -583,7 +588,7 @@
             renderManagementTable();
         }
 
-        // === ENGINE TAB 3: LAPORAN ===
+        // === ENGINE TAB 3: BUKU LAPORAN KEUANGAN ===
         function renderFinancialView() {
             let totalIncome = 0, totalExpense = 0;
             const tbody = document.getElementById("financial-table-body");
