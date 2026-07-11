@@ -3,86 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bjek - Advance POS System (Light Mode)</title>
+    <title>BJEK POS System</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        darkbg: '#f8fafc',    // Latar belakang putih abu-abu (Slate 50)
-                        darkcard: '#ffffff',  // Kartu putih bersih
-                        darkinput: '#f1f5f9', // Kolom input abu-abu terang (Slate 100)
-                        accentneon: '#0891b2', // Cyan kontras tinggi
-                        accentblue: '#2563eb'  // Biru terang modern
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        /* Custom scrollbar untuk tema terang */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f8fafc; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #0891b2; }
+        /* Kustomisasi Identitas Warna & Input Utility */
+        .text-accentblue { color: #0ea5e9; }
+        .bg-accentblue { background-color: #0ea5e9; }
+        .bg-darkinput { background-color: #f8fafc; }
         
-        /* Cetak Nota printer thermal */
+        /* Pengaturan Cetak Nota Khusus Printer Thermal / PDF */
         @media print {
-            body * { visibility: hidden; background: white !important; color: black !important; }
-            #print-receipt-area, #print-receipt-area * { visibility: visible; }
-            #print-receipt-area { position: absolute; left: 0; top: 0; width: 100%; max-width: 80mm; padding: 5mm; font-family: monospace; }
             .no-print { display: none !important; }
+            #print-receipt-area { display: block !important; }
+            body * { visibility: hidden; }
+            #print-receipt-area, #print-receipt-area * { visibility: visible; }
+            #print-receipt-area { position: absolute; left: 0; top: 0; width: 100%; }
         }
     </style>
 </head>
-<body class="bg-darkbg text-slate-800 font-sans min-h-screen flex flex-col selection:bg-accentblue selection:text-white">
+<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col">
 
-    <header class="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-40 px-6 py-3 flex flex-wrap justify-between items-center gap-4 no-print shadow-sm">
-        <div class="flex items-center space-x-3">
-            <div class="bg-gradient-to-tr from-accentblue to-cyan-500 p-2 rounded-xl shadow-md">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
+    <!-- HEADER & NAVIGASI UTAMA -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 no-print shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-accentblue text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-md shadow-sky-200">B</div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900 tracking-tight">BJEK POS SYSTEM</h1>
+                    <p class="text-[10px] text-slate-500 font-mono">Kasir Digital Modern v2.5</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-xl font-black tracking-wider text-slate-900">Bjek <span class="text-xs font-semibold text-accentblue px-2 py-0.5 bg-blue-50 rounded border border-blue-200 ml-1">Pro v2.0</span></h1>
-                <p class="text-xs text-slate-500">Kasir & Manajemen Keuangan</p>
+            
+            <!-- Tab Kontrol Menu -->
+            <nav class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button id="tab-btn-kasir" onclick="switchTab('kasir')" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 bg-accentblue text-white shadow">
+                    🛒 Kasir
+                </button>
+                <button id="tab-btn-kelola" onclick="switchTab('kelola')" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
+                    📦 Kelola Menu
+                </button>
+                <button id="tab-btn-laporan" onclick="switchTab('laporan')" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
+                    📊 Laporan
+                </button>
+            </nav>
+
+            <!-- Penunjuk Jam Realtime -->
+            <div class="text-right hidden md:block">
+                <p class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Waktu Operasional</p>
+                <p id="current-time" class="text-sm font-mono font-bold text-slate-700">00:00:00</p>
             </div>
-        </div>
-
-        <nav class="flex space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-            <button onclick="switchTab('kasir')" id="tab-btn-kasir" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 bg-accentblue text-white shadow">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                Mesin Kasir
-            </button>
-            <button onclick="switchTab('kelola')" id="tab-btn-kelola" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                Kelola Menu
-            </button>
-            <button onclick="switchTab('laporan')" id="tab-btn-laporan" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0h5a2 2 0 002-2v-3a2 2 0 00-2-2h-5m5 13v-3a2 2 0 00-2-2h-2a2 2 0 00-2 2v3a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
-                Keuangan & Laporan
-            </button>
-        </nav>
-
-        <div class="flex items-center space-x-3">
-            <div id="current-time" class="text-xs font-mono text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">00:00:00</div>
         </div>
     </header>
-        <main class="flex-1 w-full max-w-[1700px] mx-auto p-4 lg:p-6 no-print">
-        
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 no-print">
+                <!-- TAB 1: AREA UTAMA KASIR -->
         <div id="view-kasir" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 flex flex-col space-y-4">
-                <div class="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center bg-darkcard p-4 rounded-2xl border border-slate-200 shadow-sm">
-                    <div class="relative w-full sm:w-72">
-                        <span class="absolute left-3 top-2.5 text-slate-400">
+            <!-- Sisi Kiri: Pencarian, Kategori, & Grid Produk -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                    <!-- Input Pencarian -->
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-3 flex items-center text-slate-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </span>
-                        <input type="text" id="search-input" oninput="filterProducts()" placeholder="Cari nama makanan/minuman..." 
-                            class="w-full bg-darkinput border border-slate-200 rounded-xl pl-9 pr-4 py-1.5 text-sm text-slate-800 focus:outline-none focus:border-accentblue">
+                        <input type="text" id="search-input" oninput="filterProducts()" placeholder="Cari nama menu kuliner..." class="w-full bg-darkinput border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-sky-500 transition">
                     </div>
-                    <div class="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                    <!-- Filter Kategori Kapsul -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
                         <button onclick="filterCategory('Semua')" class="cat-btn px-3 py-1 text-xs font-bold rounded-lg bg-accentblue text-white border border-transparent transition">Semua</button>
                         <button onclick="filterCategory('Makanan')" class="cat-btn px-3 py-1 text-xs font-medium rounded-lg bg-darkinput text-slate-600 border border-slate-200 hover:border-slate-300 transition">Makanan</button>
                         <button onclick="filterCategory('Minuman')" class="cat-btn px-3 py-1 text-xs font-medium rounded-lg bg-darkinput text-slate-600 border border-slate-200 hover:border-slate-300 transition">Minuman</button>
@@ -90,123 +78,128 @@
                     </div>
                 </div>
 
-                <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto max-h-[calc(100vh-230px)] pr-1">
-                    </div>
+                <!-- Grid Item Produk -->
+                <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <!-- Diisi Otomatis oleh JS Engine -->
+                </div>
             </div>
 
-            <div class="flex flex-col bg-darkcard border border-slate-200 rounded-2xl shadow-md overflow-hidden max-h-[calc(100vh-120px)] sticky top-20">
-                <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                    <span class="font-bold text-slate-800 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-accentblue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                        Keranjang Kasir
-                    </span>
-                    <button onclick="clearCart()" class="text-xs text-rose-600 hover:text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 transition">Hapus Semua</button>
+            <!-- Sisi Kanan: Struk Billing Keranjang Kasir -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm h-fit space-y-4 flex flex-col justify-between">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <span>🛒 Item Keranjang Belanja</span>
+                    </h3>
+                    <button onclick="clearCart()" class="text-[10px] font-medium text-rose-500 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100 hover:bg-rose-100 transition">Reset</button>
                 </div>
 
-                <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[150px]">
+                <!-- Daftar Item -->
+                <div id="cart-items" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    <!-- Diisi Otomatis oleh JS Engine -->
+                </div>
+
+                <!-- Detail Invoice & Metode Pembayaran -->
+                <div class="border-t border-slate-100 pt-4 space-y-3 text-xs">
+                    <div class="flex justify-between font-mono text-slate-600">
+                        <span>Subtotal Awal:</span>
+                        <span id="summary-subtotal" class="font-bold">Rp 0</span>
                     </div>
 
-                <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-3.5">
-                    <div class="space-y-1.5 text-xs text-slate-600 font-mono">
-                        <div class="flex justify-between"><span>Subtotal</span><span id="summary-subtotal" class="text-slate-800 font-bold">Rp 0</span></div>
-                        <div class="flex justify-between items-center">
-                            <span>Diskon (%)</span>
-                            <input type="number" id="discount-input" min="0" max="100" value="0" oninput="calculateTotals()"
-                                class="w-14 bg-white border border-slate-300 rounded px-1.5 py-0.5 text-right text-slate-800 focus:outline-none">
-                        </div>
-                        <div class="flex justify-between text-sm font-bold text-slate-900 pt-1.5 border-t border-dashed border-slate-300">
-                            <span>Total Tagihan</span><span id="summary-total" class="text-accentblue text-base">Rp 0</span>
-                        </div>
+                    <div class="flex justify-between items-center gap-4">
+                        <span class="text-slate-600">Diskon Toko (%):</span>
+                        <input type="number" id="discount-input" oninput="calculateTotals()" min="0" max="100" value="0" class="w-16 text-center bg-darkinput border border-slate-200 rounded-lg px-2 py-1 text-slate-800 font-mono font-bold focus:outline-none focus:border-sky-500">
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Metode Pembayaran</label>
-                        <select id="payment-method" onchange="handlePaymentMethodChange()" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-accentblue font-medium">
-                            <option value="Cash">Tunai / Cash</option>
-                            <option value="QRIS">QRIS / Digital Pay</option>
+                    <div class="flex justify-between items-center gap-4">
+                        <span class="text-slate-600">Metode Bayar:</span>
+                        <select id="payment-method" onchange="handlePaymentMethodChange()" class="bg-darkinput border border-slate-200 rounded-lg px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:border-sky-500">
+                            <option value="Cash">Cash / Tunai</option>
+                            <option value="QRIS">QRIS Pay</option>
                         </select>
                     </div>
 
                     <div class="space-y-1">
-                        <label id="cash-label" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Jumlah Uang Tunai (Cash)</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2 text-sm text-slate-400 font-bold">Rp</span>
-                            <input type="number" id="cash-input" oninput="calculateTotals()" placeholder="0" 
-                                class="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-800 font-mono focus:outline-none focus:border-accentblue">
-                        </div>
+                        <label id="cash-label" class="block text-slate-600 font-medium">Jumlah Uang Tunai (Cash)</label>
+                        <input type="number" id="cash-input" oninput="calculateTotals()" placeholder="Nominal uang..." class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono text-sm font-bold focus:outline-none focus:border-sky-500">
                     </div>
 
-                    <div id="change-box" class="bg-white p-2.5 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
-                        <span id="change-label" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kembalian</span>
-                        <span id="change-display" class="font-mono text-base font-bold text-emerald-600">Rp 0</span>
+                    <div id="change-box" class="flex justify-between font-mono text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                        <span>Uang Kembalian:</span>
+                        <span id="change-display" class="font-bold text-slate-800">Rp 0</span>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="resetTransaction()" class="py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition">Reset</button>
-                        <button onclick="processCheckout()" class="py-2.5 bg-gradient-to-r from-accentblue to-blue-600 text-white text-xs font-bold rounded-xl shadow transition active:scale-95">Bayar & Nota</button>
+                    <div class="flex justify-between font-mono text-sm border-t border-dashed border-slate-200 pt-3">
+                        <span class="font-bold text-slate-800">TOTAL AKHIR:</span>
+                        <span id="summary-total" class="font-bold text-accentblue text-base">Rp 0</span>
                     </div>
                 </div>
+
+                <button onclick="processCheckout()" class="w-full py-3 bg-accentblue hover:bg-sky-600 text-white font-bold text-xs rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                    ⚡ Proses Bayar & Buat Struk
+                </button>
             </div>
         </div>
-
+                <!-- TAB 2: KELOLA DATA MENU -->
         <div id="view-kelola" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-darkcard p-6 rounded-2xl border border-slate-200 h-fit space-y-4 shadow-sm">
-                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 border-b border-slate-200 pb-3">
-                    <svg class="w-5 h-5 text-accentblue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Tambah Produk Baru
-                </h3>
-                <form id="add-product-form" onsubmit="handleCreateProduct(event)" class="space-y-3.5 text-xs">
+            <!-- Form Menu Baru -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 h-fit space-y-4 shadow-sm">
+                <h4 class="text-sm font-bold text-slate-800">Tambah Menu Baru</h4>
+                <form id="add-product-form" onsubmit="handleCreateProduct(event)" class="space-y-3 text-xs">
                     <div>
-                        <label class="block text-slate-600 mb-1 font-semibold">Nama Makanan / Minuman</label>
-                        <input type="text" id="form-name" required placeholder="Contoh: Nasi Goreng Gila" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-accentblue">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-slate-600 mb-1 font-semibold">Harga Jual (Rp)</label>
-                            <input type="number" id="form-price" required placeholder="15000" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono focus:outline-none focus:border-accentblue">
-                        </div>
-                        <div>
-                            <label class="block text-slate-600 mb-1 font-semibold">Kategori</label>
-                            <select id="form-category" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none">
-                                <option value="Makanan">Makanan</option>
-                                <option value="Minuman">Minuman</option>
-                                <option value="Cemilan">Cemilan</option>
-                            </select>
-                        </div>
+                        <label class="block text-slate-600 mb-1">Nama Item Kuliner</label>
+                        <input type="text" id="form-name" required placeholder="Contoh: Es Kopi Susu Aren" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
                     </div>
                     <div>
-                        <label class="block text-slate-600 mb-1 font-semibold">URL Link Foto Produk (Opsional)</label>
-                        <input type="url" id="form-image" placeholder="https://images.unsplash.com/..." class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none">
+                        <label class="block text-slate-600 mb-1">Harga Jual (Rp)</label>
+                        <input type="number" id="form-price" required placeholder="15000" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono focus:outline-none focus:border-sky-500">
                     </div>
-                    <button type="submit" class="w-full py-2.5 mt-2 bg-accentblue hover:bg-blue-700 text-white font-bold rounded-xl shadow transition">
-                        Simpan ke Daftar Menu
+                    <div>
+                        <label class="block text-slate-600 mb-1">Kategori Menu</label>
+                        <select id="form-category" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
+                            <option value="Makanan">Makanan</option>
+                            <option value="Minuman">Minuman</option>
+                            <option value="Cemilan">Cemilan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-600 mb-1">URL Link Foto Menu (Opsional)</label>
+                        <input type="text" id="form-image" placeholder="https://domain.com/gambar.jpg" class="w-full bg-darkinput border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-accentblue hover:bg-sky-600 text-white font-semibold rounded-xl transition shadow">
+                        Simpan & Daftarkan Menu
                     </button>
                 </form>
             </div>
-            
-            <div class="lg:col-span-2 bg-darkcard p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 class="text-base font-bold text-slate-800 mb-4 flex justify-between items-center">
-                    <span>Daftar Menu Aktif Bjek</span>
-                    <span id="management-count" class="text-xs bg-slate-100 px-2.5 py-1 rounded-full text-slate-600 border border-slate-200">0 Menu</span>
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-600">
-                        <thead class="bg-slate-100 text-slate-700 uppercase font-mono border-b border-slate-200">
+
+            <!-- Tabel Daftar Menu -->
+            <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-sm">
+                <div class="flex justify-between items-center">
+                    <h4 class="text-sm font-bold text-slate-800">Daftar Menu Terdaftar</h4>
+                    <span id="management-count" class="text-xs font-mono bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-slate-600">0 Menu</span>
+                </div>
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-600 uppercase font-mono border-b border-slate-200">
                             <tr>
-                                <th class="p-3">Nama Produk</th>
+                                <th class="p-3">Nama Menu</th>
                                 <th class="p-3">Kategori</th>
-                                <th class="p-3 text-right">Harga</th>
+                                <th class="p-3 text-right">Harga Jual</th>
                                 <th class="p-3 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="management-table-body" class="divide-y divide-slate-200">
-                            </tbody>
+                            <!-- Diisi Otomatis via JS -->
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
-                <div id="view-laporan" class="hidden space-y-6">
+
+        <!-- TAB 3: LAPORAN KEUANGAN & PEMISAHAN NOMINAL PEMBAYARAN -->
+        <div id="view-laporan" class="hidden space-y-6">
+            <!-- Ringkasan Finansial Modern -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Box Omset Total (Dipecah menjadi Cash & QRIS) -->
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-between shadow-sm space-y-3">
                     <div class="flex items-center justify-between">
                         <div>
@@ -217,6 +210,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                         </div>
                     </div>
+                    <!-- Pemisahan Nominal Pembayaran -->
                     <div class="pt-2 border-t border-slate-100 grid grid-cols-2 text-[11px] font-mono text-slate-600">
                         <div>Tunai/Cash: <span id="report-cash-income" class="block font-bold text-slate-800">Rp 0</span></div>
                         <div class="border-l border-slate-200 pl-3">QRIS Pay: <span id="report-qris-income" class="block font-bold text-accentblue">Rp 0</span></div>
@@ -244,6 +238,24 @@
                 </div>
             </div>
 
+            <!-- FITUR EKSPOR REKAP HARI INI -->
+            <div class="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm items-center justify-between">
+                <div class="text-xs text-slate-600 font-medium">
+                    <span class="font-bold text-slate-800">📊 Aksi Rekap Laporan Harian:</span> Kirimkan atau cetak seluruh riwayat akumulasi omset penjualan kasir hari ini.
+                </div>
+                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <button onclick="exportTodayToWhatsApp()" class="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow transition active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                        Kirim Rekap ke WA
+                    </button>
+                    <button onclick="exportTodayToPDF()" class="flex-1 sm:flex-initial px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow transition active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9v4a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Cetak PDF Harian
+                    </button>
+                </div>
+            </div>
+
+            <!-- Jurnal Kas Masuk & Keluar -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 h-fit space-y-4 shadow-sm">
                     <h4 class="text-sm font-bold text-slate-800">Catat Pengeluaran Baru</h4>
@@ -278,7 +290,8 @@
                                 </tr>
                             </thead>
                             <tbody id="financial-table-body" class="divide-y divide-slate-200 font-mono text-slate-700">
-                                </tbody>
+                                <!-- Diisi Otomatis via JS -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -286,6 +299,7 @@
         </div>
     </main>
 
+    <!-- POPUP MODAL NOTA / STRUK TRANSAKSI -->
     <div id="invoice-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300 no-print">
         <div class="bg-white border border-slate-200 p-5 rounded-2xl max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform duration-300">
             <div class="text-center border-b border-slate-200 pb-3 mb-3">
@@ -297,7 +311,8 @@
             </div>
 
             <div id="manifest-summary" class="bg-slate-50 p-3 rounded-xl font-mono text-xs text-slate-800 space-y-1.5 border border-slate-200 mb-4">
-                </div>
+                <!-- Data Ringkasan Struk Belanja -->
+            </div>
 
             <div class="space-y-2">
                 <button onclick="exportToWhatsApp()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow transition">
@@ -313,6 +328,7 @@
         </div>
     </div>
 
+    <!-- AREA OUTLET PRINTER THERMAL (HIDDEN DI LAYAR) -->
     <div id="print-receipt-area" class="hidden"></div>
         <script>
         // Database Lokal Awal Produk (Default)
@@ -362,14 +378,13 @@
             const changeBox = document.getElementById("change-box");
 
             if (method === "QRIS") {
-                // Jika QRIS, otomatis set uang tunai pas dengan total tagihan, sembunyikan kotak kembalian
                 let subtotal = 0;
                 cart.forEach(i => subtotal += (i.product.price * i.quantity));
                 const disc = Math.min(100, Math.max(0, parseFloat(document.getElementById("discount-input").value) || 0));
                 const total = subtotal - (subtotal * (disc / 100));
 
                 cashInput.value = total;
-                cashInput.disabled = true; // Kunci agar tidak perlu input manual
+                cashInput.disabled = true;
                 document.getElementById("cash-label").innerText = "Nominal Bayar QRIS (Otomatis)";
                 changeBox.classList.add("hidden");
             } else {
@@ -498,15 +513,21 @@
             if (data.cash < data.total) return alert("Uang pembayaran tidak cukup!");
 
             const invoiceId = "BJK-" + Date.now().toString().slice(-6);
+            const currentDateStr = new Date().toLocaleDateString('id-ID');
+
             activeCheckoutData = {
                 invoice: invoiceId, date: new Date().toLocaleString('id-ID'), items: [...cart],
                 subtotal: data.subtotal, discount: data.disc, total: data.total, cash: data.cash, change: data.change, method: data.method
             };
 
-            // Masukkan data metode ke dalam jurnal keuangan
             financialLogs.unshift({
-                id: Date.now(), time: new Date().toLocaleTimeString('id-ID'),
-                desc: `Penjualan Kasir (${invoiceId})`, type: 'Pemasukan', method: data.method, amount: data.total
+                id: Date.now(), 
+                date: currentDateStr,
+                time: new Date().toLocaleTimeString('id-ID'),
+                desc: `Penjualan Kasir (${invoiceId})`, 
+                type: 'Pemasukan', 
+                method: data.method, 
+                amount: data.total
             });
             syncStorage();
 
@@ -574,7 +595,7 @@
             window.print();
         }
 
-        // === ENGINE MANAGEMENT MENU ===
+        // === ENGINE KELOLA DAFTAR MENU ===
         function renderManagementTable() {
             const tbody = document.getElementById("management-table-body");
             tbody.innerHTML = "";
@@ -609,7 +630,7 @@
             products = products.filter(p => p.id !== productId); syncStorage(); renderManagementTable();
         }
 
-        // === ENGINE LAPORAN (PEMISAHAN DETIL NOMINAL) ===
+        // === ENGINE LAPORAN FINANSIAL & REKAP HARIAN ===
         function renderFinancialView() {
             let totalIncome = 0, totalExpense = 0;
             let cashIncome = 0, qrisIncome = 0;
@@ -621,13 +642,12 @@
                 if (log.type === 'Pemasukan') {
                     totalIncome += log.amount;
                     if (log.method === 'QRIS') { qrisIncome += log.amount; } 
-                    else { cashIncome += log.amount; } // Default ke cash jika log lama belum bermetode
+                    else { cashIncome += log.amount; }
                 }
                 if (log.type === 'Pengeluaran') totalExpense += log.amount;
 
                 const tr = document.createElement("tr");
                 tr.className = "border-b border-slate-200 hover:bg-slate-50/80 transition";
-                const badgeClass = log.type === 'Pemasukan' ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50';
                 const methodLabel = log.type === 'Pemasukan' ? (log.method || 'Cash') : '-';
 
                 tr.innerHTML = `
@@ -643,7 +663,6 @@
             document.getElementById("report-cash-income").innerText = formatRupiah(cashIncome);
             document.getElementById("report-qris-income").innerText = formatRupiah(qrisIncome);
             document.getElementById("report-expense").innerText = formatRupiah(totalExpense);
-            
             document.getElementById("report-net").innerText = formatRupiah(net);
             document.getElementById("report-net").className = net < 0 ? "text-xl font-bold font-mono text-rose-600 mt-1" : "text-xl font-bold font-mono text-accentblue mt-1";
         }
@@ -652,9 +671,120 @@
             e.preventDefault();
             const desc = document.getElementById("exp-desc").value;
             const amount = parseFloat(document.getElementById("exp-amount").value) || 0;
-            financialLogs.unshift({ id: Date.now(), time: new Date().toLocaleTimeString('id-ID'), desc, type: 'Pengeluaran', amount });
+            const currentDateStr = new Date().toLocaleDateString('id-ID');
+
+            financialLogs.unshift({ 
+                id: Date.now(), 
+                date: currentDateStr,
+                time: new Date().toLocaleTimeString('id-ID'), 
+                desc, 
+                type: 'Pengeluaran', 
+                amount 
+            });
             syncStorage(); document.getElementById("exp-desc").value = ""; document.getElementById("exp-amount").value = "";
             renderFinancialView(); alert("Pengeluaran berhasil dicatat!");
+        }
+
+        // 🟢 EKSPOR REKAP HARIAN KE WHATSAPP
+        function exportTodayToWhatsApp() {
+            const todayStr = new Date().toLocaleDateString('id-ID');
+            const todayLogs = financialLogs.filter(log => log.date === todayStr);
+            
+            let totalIncome = 0, cashIncome = 0, qrisIncome = 0, totalExpense = 0;
+            todayLogs.forEach(log => {
+                if (log.type === 'Pemasukan') {
+                    totalIncome += log.amount;
+                    if (log.method === 'QRIS') qrisIncome += log.amount;
+                    else cashIncome += log.amount;
+                } else if (log.type === 'Pengeluaran') {
+                    totalExpense += log.amount;
+                }
+            });
+            const net = totalIncome - totalExpense;
+
+            let msg = `*REKAP TOTAL PEMBELIAN & FINANSIAL BJEK HARI INI*%0A`;
+            msg += `Tanggal Laporan: ${todayStr}%0A`;
+            msg += `============================%0A`;
+            msg += `*1. TOTAL OMSET:* ${formatRupiah(totalIncome)}%0A`;
+            msg += `   - Nominal Tunai/Cash: ${formatRupiah(cashIncome)}%0A`;
+            msg += `   - Nominal QRIS Pay: ${formatRupiah(qrisIncome)}%0A`;
+            msg += `*2. TOTAL PENGELUARAN:* ${formatRupiah(totalExpense)}%0A`;
+            msg += `============================%0A`;
+            msg += `*LABA KAS BERSIH:* *${formatRupiah(net)}*%0A%0A`;
+            msg += `_Daftar Mutasi Penjualan & Pengeluaran:_%0A`;
+            
+            if (todayLogs.length === 0) {
+                msg += `(Belum ada data transaksi untuk hari ini)%0A`;
+            } else {
+                todayLogs.forEach(log => {
+                    const sign = log.type === 'Pemasukan' ? '📈 Masuk' : '📉 Keluar';
+                    const meth = log.type === 'Pemasukan' ? ` (${log.method || 'Cash'})` : '';
+                    msg += `- [${log.time}] ${sign} - ${log.desc}${meth}: *${formatRupiah(log.amount)}*%0A`;
+                });
+            }
+            window.open(`https://wa.me/?text=${msg}`, '_blank');
+        }
+
+        // 🔵 CETAK REKAP HARIAN KE PRINTER / PDF DOCUMENT
+        function exportTodayToPDF() {
+            const todayStr = new Date().toLocaleDateString('id-ID');
+            const todayLogs = financialLogs.filter(log => log.date === todayStr);
+            
+            let totalIncome = 0, cashIncome = 0, qrisIncome = 0, totalExpense = 0;
+            let rowsHtml = "";
+            
+            todayLogs.forEach(log => {
+                if (log.type === 'Pemasukan') {
+                    totalIncome += log.amount;
+                    if (log.method === 'QRIS') qrisIncome += log.amount;
+                    else cashIncome += log.amount;
+                } else if (log.type === 'Pengeluaran') {
+                    totalExpense += log.amount;
+                }
+                const methodLabel = log.type === 'Pemasukan' ? (log.method || 'Cash') : '-';
+                const sign = log.type === 'Pemasukan' ? '+' : '-';
+                const color = log.type === 'Pemasukan' ? 'color: #10b981;' : 'color: #ef4444;';
+                
+                rowsHtml += `<tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 6px; text-align: left;">${log.time}</td>
+                    <td style="padding: 6px; text-align: left; font-family: sans-serif;">${log.desc}</td>
+                    <td style="padding: 6px; text-align: center;">${methodLabel}</td>
+                    <td style="padding: 6px; text-align: right; font-weight: bold; ${color}">${sign} ${formatRupiah(log.amount)}</td>
+                </tr>`;
+            });
+            const net = totalIncome - totalExpense;
+
+            const printArea = document.getElementById("print-receipt-area");
+            printArea.innerHTML = `
+                <div style="font-family: monospace; font-size: 12px; color: black; max-width: 100%; padding: 10px;">
+                    <h2 style="text-align: center; margin-bottom: 2px; font-family: sans-serif;">BJEK POS SYSTEM</h2>
+                    <p style="text-align: center; margin-top: 0; font-size: 11px;">REKAP TRANSAKSI HARIAN</p>
+                    <hr style="border-top: 1px dashed black;">
+                    <table style="width: 100%; margin-bottom: 12px; font-size: 11px;">
+                        <tr><td>Hari/Tanggal</td><td>: ${todayStr}</td></tr>
+                        <tr><td>Total Pendapatan</td><td>: <b>${formatRupiah(totalIncome)}</b><br>&nbsp;&nbsp;• Cash: ${formatRupiah(cashIncome)}<br>&nbsp;&nbsp;• QRIS: ${formatRupiah(qrisIncome)}</td></tr>
+                        <tr><td>Total Biaya Kas</td><td>: <b>${formatRupiah(totalExpense)}</b></td></tr>
+                        <tr style="font-size: 13px;"><td><b>Laba Kas Bersih</b></td><td>: <b>${formatRupiah(net)}</b></td></tr>
+                    </table>
+                    <hr style="border-top: 1px dashed black;">
+                    <h4 style="margin: 8px 0 4px 0; font-family: sans-serif;">Rincian Log Pembelian/Mutasi:</h4>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                        <thead>
+                            <tr style="background: #f1f5f9; border-bottom: 1px solid black;">
+                                <th style="padding: 5px; text-align: left;">Jam</th>
+                                <th style="padding: 5px; text-align: left;">Keterangan</th>
+                                <th style="padding: 5px; text-align: center;">Metode</th>
+                                <th style="padding: 5px; text-align: right;">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml || '<tr><td colspan="4" style="text-align:center; padding: 10px;">Belum ada log transaksi hari ini</td></tr>'}
+                        </tbody>
+                    </table>
+                    <hr style="border-top: 1px dashed black; margin-top: 15px;">
+                    <p style="text-align: center; font-size: 9px; color: #555;">Dicetak otomatis melalui Aplikasi POS Bjek Pro</p>
+                </div>`;
+            window.print();
         }
 
         function clearFinancialLogs() {
