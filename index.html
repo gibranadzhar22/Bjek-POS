@@ -341,552 +341,557 @@
     <!-- AREA OUTLET PRINTER THERMAL (HIDDEN DI LAYAR) -->
     <div id="print-receipt-area" class="hidden"></div>
         <script>
-        // Database Lokal Awal Produk (Default)
-        const defaultProducts = [
-            { id: 1, name: "Es Kopi Aren Premium", price: 18000, category: "Minuman", image: "" },
-            { id: 2, name: "Matcha Latte Ice", price: 22000, category: "Minuman", image: "" },
-            { id: 3, name: "Nasi Goreng Spesial Bjek", price: 25000, category: "Makanan", image: "" },
-            { id: 4, name: "Croissant Cokelat Garing", price: 20000, category: "Cemilan", image: "" }
-        ];
+            // Database Lokal Awal Produk (Default)
+const defaultProducts = [
+    { id: 1, name: "Es Kopi Aren Premium", price: 18000, category: "Minuman", image: "" },
+    { id: 2, name: "Matcha Latte Ice", price: 22000, category: "Minuman", image: "" },
+    { id: 3, name: "Nasi Goreng Spesial Bjek", price: 25000, category: "Makanan", image: "" },
+    { id: 4, name: "Croissant Cokelat Garing", price: 20000, category: "Cemilan", image: "" }
+];
 
-        let products = JSON.parse(localStorage.getItem("bjek_products")) || defaultProducts;
-        let financialLogs = JSON.parse(localStorage.getItem("bjek_finance")) || [];
-        
-        let cart = [];
-        let activeCategory = "Semua";
-        let activeCheckoutData = null;
+let products = JSON.parse(localStorage.getItem("bjek_products")) || defaultProducts;
+let financialLogs = JSON.parse(localStorage.getItem("bjek_finance")) || [];
 
-        function syncStorage() {
-            localStorage.setItem("bjek_products", JSON.stringify(products));
-            localStorage.setItem("bjek_finance", JSON.stringify(financialLogs));
+let cart = [];
+let activeCategory = "Semua";
+let activeCheckoutData = null;
+
+function syncStorage() {
+    localStorage.setItem("bjek_products", JSON.stringify(products));
+    localStorage.setItem("bjek_finance", JSON.stringify(financialLogs));
+}
+
+function switchTab(tabName) {
+    const tabs = ['kasir', 'kelola', 'laporan'];
+    tabs.forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        document.getElementById(`tab-btn-${t}`).className = "flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900";
+    });
+    document.getElementById(`view-${tabName}`).classList.remove('hidden');
+    
+    let activeColor = "flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 bg-accentblue text-white shadow";
+    document.getElementById(`tab-btn-${tabName}`).className = activeColor;
+    
+    if (tabName === 'kasir') renderProductsGrid();
+    if (tabName === 'kelola') renderManagementTable();
+    if (tabName === 'laporan') renderFinancialView();
+}
+
+function formatRupiah(num) {
+    return "Rp " + new Intl.NumberFormat("id-ID").format(num);
+}
+
+function handlePaymentMethodChange() {
+    const method = document.getElementById("payment-method").value;
+    const cashInput = document.getElementById("cash-input");
+    const changeBox = document.getElementById("change-box");
+
+    if (method === "QRIS") {
+        let subtotal = 0;
+        cart.forEach(i => subtotal += (i.product.price * i.quantity));
+        const disc = Math.min(100, Math.max(0, parseFloat(document.getElementById("discount-input").value) || 0));
+        const total = subtotal - (subtotal * (disc / 100));
+
+        cashInput.value = total;
+        cashInput.disabled = true;
+        document.getElementById("cash-label").innerText = "Nominal Bayar QRIS (Otomatis)";
+        changeBox.classList.add("hidden");
+    } else {
+        cashInput.value = "";
+        cashInput.disabled = false;
+        document.getElementById("cash-label").innerText = "Jumlah Uang Tunai (Cash)";
+        changeBox.classList.remove("hidden");
+    }
+    calculateTotals();
+}
+
+function calculateTotals() {
+    let subtotal = 0;
+    cart.forEach(i => subtotal += (i.product.price * i.quantity));
+    const disc = Math.min(100, Math.max(0, parseFloat(document.getElementById("discount-input").value) || 0));
+    const total = subtotal - (subtotal * (disc / 100));
+    const method = document.getElementById("payment-method").value;
+    
+    let cash = parseFloat(document.getElementById("cash-input").value) || 0;
+    if (method === "QRIS") { cash = total; }
+    
+    const change = cash > total ? cash - total : 0;
+
+    document.getElementById("summary-subtotal").innerText = formatRupiah(subtotal);
+    document.getElementById("summary-total").innerText = formatRupiah(total);
+    document.getElementById("change-display").innerText = formatRupiah(change);
+    return { subtotal, total, cash, change, disc, method };
+}
+
+function renderProductsGrid(filteredArray = products) {
+    const grid = document.getElementById("products-grid");
+    grid.innerHTML = "";
+    let displayList = filteredArray;
+    if (activeCategory !== "Semua") { displayList = displayList.filter(p => p.category === activeCategory); }
+    if (displayList.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-12 text-center text-xs text-slate-400">Tidak ada item menu ditemukan.</div>`;
+        return;
+    }
+    displayList.forEach(product => {
+        const fallbackImg = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=200";
+        const card = document.createElement("div");
+        card.className = "bg-white border border-slate-200 rounded-xl overflow-hidden group flex flex-col justify-between shadow-sm";
+        card.innerHTML = `
+            <div class="h-32 bg-slate-100 relative">
+                <img src="${product.image || fallbackImg}" alt="${product.name}" class="w-full h-full object-cover opacity-90">
+                <span class="absolute top-2 right-2 text-[9px] font-bold px-2 py-0.5 bg-white/90 text-accentblue rounded-full border border-slate-200">${product.category}</span>
+            </div>
+            <div class="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                <div>
+                    <h4 class="text-xs font-bold text-slate-800 line-clamp-2">${product.name}</h4>
+                    <p class="text-sm font-mono font-bold text-accentblue mt-0.5">${formatRupiah(product.price)}</p>
+                </div>
+                <button onclick="addToCart(${product.id})" class="w-full py-1.5 bg-slate-50 hover:bg-accentblue hover:text-white border border-slate-200 text-slate-700 font-bold text-xs rounded-lg transition">
+                    + Masukkan
+                </button>
+            </div>`;
+        grid.appendChild(card);
+    });
+}
+
+function filterProducts() {
+    const text = document.getElementById("search-input").value.toLowerCase();
+    const filtered = products.filter(p => p.name.toLowerCase().includes(text));
+    renderProductsGrid(filtered);
+}
+
+function filterCategory(cat) {
+    activeCategory = cat;
+    document.querySelectorAll(".cat-btn").forEach(btn => {
+        if (btn.innerText === cat) {
+            btn.className = "cat-btn px-3 py-1 text-xs font-bold rounded-lg bg-accentblue text-white border border-transparent transition";
+        } else {
+            btn.className = "cat-btn px-3 py-1 text-xs font-medium rounded-lg bg-darkinput text-slate-600 border border-slate-200 hover:border-slate-300 transition";
         }
+    });
+    renderProductsGrid();
+}
 
-        function switchTab(tabName) {
-            const tabs = ['kasir', 'kelola', 'laporan'];
-            tabs.forEach(t => {
-                document.getElementById(`view-${t}`).classList.add('hidden');
-                document.getElementById(`tab-btn-${t}`).className = "flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900";
-            });
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            
-            let activeColor = "flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 bg-accentblue text-white shadow";
-            document.getElementById(`tab-btn-${tabName}`).className = activeColor;
-            
-            if (tabName === 'kasir') renderProductsGrid();
-            if (tabName === 'kelola') renderManagementTable();
-            if (tabName === 'laporan') renderFinancialView();
+function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    const existing = cart.find(item => item.product.id === productId);
+    if (existing) { existing.quantity++; } else { cart.push({ product, quantity: 1 }); }
+    renderCart();
+}
+
+function updateCartQty(id, delta) {
+    const item = cart.find(i => i.product.id === id);
+    if (!item) return;
+    item.quantity += delta;
+    if (item.quantity <= 0) cart = cart.filter(i => i.product.id !== id);
+    renderCart();
+}
+
+function clearCart() { cart = []; renderCart(); }
+
+function renderCart() {
+    const container = document.getElementById("cart-items");
+    container.innerHTML = "";
+    if (cart.length === 0) {
+        container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-10 text-center"><p class="text-xs">Keranjang kosong</p></div>`;
+        calculateTotals();
+        return;
+    }
+    cart.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-xl space-x-2";
+        row.innerHTML = `
+            <div class="flex-1 min-w-0 text-xs">
+                <h5 class="font-bold text-slate-800 truncate">${item.product.name}</h5>
+                <p class="font-mono text-slate-500 text-[10px]">${formatRupiah(item.product.price)}</p>
+            </div>
+            <div class="flex items-center bg-white border border-slate-300 rounded-lg p-0.5 text-xs">
+                <button onclick="updateCartQty(${item.product.id}, -1)" class="w-5 h-5 font-bold text-slate-500 hover:text-rose-600">-</button>
+                <span class="w-5 text-center font-mono font-bold text-slate-800">${item.quantity}</span>
+                <button onclick="updateCartQty(${item.product.id}, 1)" class="w-5 h-5 font-bold text-slate-500 hover:text-accentblue">+</button>
+            </div>`;
+        container.appendChild(row);
+    });
+    calculateTotals();
+}
+
+function processCheckout() {
+    if (cart.length === 0) return alert("Pilih menu terlebih dahulu!");
+    const data = calculateTotals();
+    if (data.cash < data.total) return alert("Uang pembayaran tidak cukup!");
+
+    const invoiceId = "BJK-" + Date.now().toString().slice(-6);
+    const currentDateStr = new Date().toLocaleDateString('id-ID');
+
+    activeCheckoutData = {
+        invoice: invoiceId, date: new Date().toLocaleString('id-ID'), items: [...cart],
+        subtotal: data.subtotal, discount: data.disc, total: data.total, cash: data.cash, change: data.change, method: data.method
+    };
+
+    financialLogs.unshift({
+        id: Date.now(), 
+        date: currentDateStr,
+        time: new Date().toLocaleTimeString('id-ID'),
+        desc: `Penjualan Kasir (${invoiceId})`, 
+        type: 'Pemasukan', 
+        method: data.method, 
+        amount: data.total,
+        items: cart.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price }))
+    });
+    syncStorage();
+
+    const manifestDiv = document.getElementById("manifest-summary");
+    let itemsText = "";
+    activeCheckoutData.items.forEach(i => {
+        itemsText += `<div class="flex justify-between"><span>${i.product.name} x${i.quantity}</span><span>${formatRupiah(i.product.price * i.quantity)}</span></div>`;
+    });
+
+    manifestDiv.innerHTML = `
+        <div class="text-center font-bold text-slate-900 mb-1 border-b border-slate-200 pb-1">BJEK POS RECEIPT</div>
+        <div class="text-[10px] text-slate-500 mb-2">Inv: ${activeCheckoutData.invoice}<br>Metode: ${activeCheckoutData.method}<br>Waktu: ${activeCheckoutData.date}</div>
+        <div class="space-y-1 border-b border-dashed border-slate-300 pb-2 mb-2 text-[11px]">${itemsText}</div>
+        <div class="flex justify-between font-bold text-accentblue"><span>Total Akhir:</span><span>${formatRupiah(activeCheckoutData.total)}</span></div>
+        <div class="flex justify-between font-bold text-emerald-600 pt-1"><span>Bayar (${activeCheckoutData.method}):</span><span>${formatRupiah(activeCheckoutData.cash)}</span></div>
+    `;
+
+    const modal = document.getElementById("invoice-modal");
+    modal.classList.remove("hidden");
+    setTimeout(() => { modal.classList.remove("opacity-0"); }, 50);
+}
+
+function closeInvoiceModal() {
+    const modal = document.getElementById("invoice-modal");
+    modal.classList.add("opacity-0");
+    setTimeout(() => { modal.classList.add("hidden"); resetTransaction(); }, 300);
+}
+
+function resetTransaction() {
+    document.getElementById("cash-input").value = "";
+    document.getElementById("discount-input").value = "0";
+    document.getElementById("payment-method").value = "Cash";
+    handlePaymentMethodChange();
+    clearCart();
+}
+
+function exportToWhatsApp() {
+    if (!activeCheckoutData) return;
+    let msg = `*BJEK POS SYSTEM - NOTA BELANJA*\n`;
+    msg += `Invoice: \`${activeCheckoutData.invoice}\` (${activeCheckoutData.method})\n`;
+    msg += `============================\n`;
+    activeCheckoutData.items.forEach(i => { msg += `- *${i.product.name}* (x${i.quantity}) : ${formatRupiah(i.product.price * i.quantity)}\n`; });
+    msg += `============================\n`;
+    msg += `*TOTAL AKHIR:* *${formatRupiah(activeCheckoutData.total)}*\n`;
+    msg += `_Terima kasih telah berbelanja!_`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function exportToPDF() {
+    if (!activeCheckoutData) return;
+    const printArea = document.getElementById("print-receipt-area");
+    let itemsHtml = "";
+    activeCheckoutData.items.forEach(i => {
+        itemsHtml += `<tr style="border-bottom: 1px dashed #ccc;"><td style="padding: 4px 0;">${i.product.name}<br><small>x${i.quantity}</small></td><td style="text-align: right;">${formatRupiah(i.product.price * i.quantity)}</td></tr>`;
+    });
+    printArea.innerHTML = `
+        <div style="text-align: center; font-family: monospace; font-size: 12px; color: black;">
+            <h2>BJEK KASIR</h2><hr style="border-top: 1px dashed black;">
+            <div style="text-align: left;">Inv: ${activeCheckoutData.invoice}<br>Metode: ${activeCheckoutData.method}<br>Waktu: ${activeCheckoutData.date}</div>
+            <table style="width: 100%; border-collapse: collapse;">${itemsHtml}</table><hr style="border-top: 1px dashed black;">
+            <table style="width: 100%;">
+                <tr><td>Total Akhir</td><td style="text-align: right; font-weight: bold;">${formatRupiah(activeCheckoutData.total)}</td></tr>
+            </table>
+        </div>`;
+    window.print();
+}
+
+function renderManagementTable() {
+    const tbody = document.getElementById("management-table-body");
+    tbody.innerHTML = "";
+    document.getElementById("management-count").innerText = `${products.length} Menu`;
+    products.forEach((product) => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b border-slate-200 hover:bg-slate-50 transition";
+        tr.innerHTML = `
+            <td class="p-3 font-semibold text-slate-800">${product.name}</td>
+            <td class="p-3"><span class="px-2 py-0.5 text-[10px] bg-slate-100 border border-slate-200 rounded-full text-slate-600">${product.category}</span></td>
+            <td class="p-3 text-right font-mono font-bold text-accentblue">${formatRupiah(product.price)}</td>
+            <td class="p-3 text-center">
+                <button onclick="handleDeleteProduct(${product.id})" class="p-1.5 text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition">Hapus</button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function handleCreateProduct(e) {
+    e.preventDefault();
+    const name = document.getElementById("form-name").value;
+    const price = parseFloat(document.getElementById("form-price").value) || 0;
+    const category = document.getElementById("form-category").value;
+    const image = document.getElementById("form-image").value || "";
+    products.push({ id: Date.now(), name, price, category, image });
+    syncStorage(); document.getElementById("add-product-form").reset();
+    renderManagementTable(); alert(`Sukses menambahkan "${name}"!`);
+}
+
+function handleDeleteProduct(productId) {
+    if (!confirm("Hapus item menu ini?")) return;
+    products = products.filter(p => p.id !== productId); syncStorage(); renderManagementTable();
+                                }
         }
-
-        function formatRupiah(num) {
-            return "Rp " + new Intl.NumberFormat("id-ID").format(num);
-        }
-
-        function handlePaymentMethodChange() {
-            const method = document.getElementById("payment-method").value;
-            const cashInput = document.getElementById("cash-input");
-            const changeBox = document.getElementById("change-box");
-
-            if (method === "QRIS") {
-                let subtotal = 0;
-                cart.forEach(i => subtotal += (i.product.price * i.quantity));
-                const disc = Math.min(100, Math.max(0, parseFloat(document.getElementById("discount-input").value) || 0));
-                const total = subtotal - (subtotal * (disc / 100));
-
-                cashInput.value = total;
-                cashInput.disabled = true;
-                document.getElementById("cash-label").innerText = "Nominal Bayar QRIS (Otomatis)";
-                changeBox.classList.add("hidden");
-            } else {
-                cashInput.value = "";
-                cashInput.disabled = false;
-                document.getElementById("cash-label").innerText = "Jumlah Uang Tunai (Cash)";
-                changeBox.classList.remove("hidden");
-            }
-            calculateTotals();
-        }
-
-        function calculateTotals() {
-            let subtotal = 0;
-            cart.forEach(i => subtotal += (i.product.price * i.quantity));
-            const disc = Math.min(100, Math.max(0, parseFloat(document.getElementById("discount-input").value) || 0));
-            const total = subtotal - (subtotal * (disc / 100));
-            const method = document.getElementById("payment-method").value;
-            
-            let cash = parseFloat(document.getElementById("cash-input").value) || 0;
-            if (method === "QRIS") { cash = total; }
-            
-            const change = cash > total ? cash - total : 0;
-
-            document.getElementById("summary-subtotal").innerText = formatRupiah(subtotal);
-            document.getElementById("summary-total").innerText = formatRupiah(total);
-            document.getElementById("change-display").innerText = formatRupiah(change);
-            return { subtotal, total, cash, change, disc, method };
-        }
-
-        function renderProductsGrid(filteredArray = products) {
-            const grid = document.getElementById("products-grid");
-            grid.innerHTML = "";
-            let displayList = filteredArray;
-            if (activeCategory !== "Semua") { displayList = displayList.filter(p => p.category === activeCategory); }
-            if (displayList.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-12 text-center text-xs text-slate-400">Tidak ada item menu ditemukan.</div>`;
-                return;
-            }
-            displayList.forEach(product => {
-                const fallbackImg = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=200";
-                const card = document.createElement("div");
-                card.className = "bg-white border border-slate-200 rounded-xl overflow-hidden group flex flex-col justify-between shadow-sm";
-                card.innerHTML = `
-                    <div class="h-32 bg-slate-100 relative">
-                        <img src="${product.image || fallbackImg}" alt="${product.name}" class="w-full h-full object-cover opacity-90">
-                        <span class="absolute top-2 right-2 text-[9px] font-bold px-2 py-0.5 bg-white/90 text-accentblue rounded-full border border-slate-200">${product.category}</span>
-                    </div>
-                    <div class="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
-                        <div>
-                            <h4 class="text-xs font-bold text-slate-800 line-clamp-2">${product.name}</h4>
-                            <p class="text-sm font-mono font-bold text-accentblue mt-0.5">${formatRupiah(product.price)}</p>
-                        </div>
-                        <button onclick="addToCart(${product.id})" class="w-full py-1.5 bg-slate-50 hover:bg-accentblue hover:text-white border border-slate-200 text-slate-700 font-bold text-xs rounded-lg transition">
-                            + Masukkan
-                        </button>
-                    </div>`;
-                grid.appendChild(card);
-            });
-        }
-
-        function filterProducts() {
-            const text = document.getElementById("search-input").value.toLowerCase();
-            const filtered = products.filter(p => p.name.toLowerCase().includes(text));
-            renderProductsGrid(filtered);
-        }
-
-        function filterCategory(cat) {
-            activeCategory = cat;
-            document.querySelectorAll(".cat-btn").forEach(btn => {
-                if (btn.innerText === cat) {
-                    btn.className = "cat-btn px-3 py-1 text-xs font-bold rounded-lg bg-accentblue text-white border border-transparent transition";
+function getTodayCalculatedItems(todayStr) {
+    const todayLogs = financialLogs.filter(log => log.date === todayStr);
+    let summaryItems = {};
+    todayLogs.forEach(log => {
+        if (log.items && log.type === 'Pemasukan') {
+            log.items.forEach(item => {
+                if (summaryItems[item.name]) {
+                    summaryItems[item.name] += item.quantity;
                 } else {
-                    btn.className = "cat-btn px-3 py-1 text-xs font-medium rounded-lg bg-darkinput text-slate-600 border border-slate-200 hover:border-slate-300 transition";
+                    summaryItems[item.name] = item.quantity;
                 }
             });
-            renderProductsGrid();
+        }
+    });
+    return summaryItems;
+}
+
+function renderFinancialView() {
+    let totalIncome = 0, totalExpense = 0;
+    let cashIncome = 0, qrisIncome = 0;
+    const todayStr = new Date().toLocaleDateString('id-ID');
+
+    const tbody = document.getElementById("financial-table-body");
+    tbody.innerHTML = "";
+    
+    financialLogs.forEach(log => {
+        if (log.type === 'Pemasukan') {
+            totalIncome += log.amount;
+            if (log.method === 'QRIS') { qrisIncome += log.amount; } 
+            else { cashIncome += log.amount; }
+        }
+        if (log.type === 'Pengeluaran') totalExpense += log.amount;
+
+        const tr = document.createElement("tr");
+        tr.className = "border-b border-slate-200 hover:bg-slate-50/80 transition";
+        const methodLabel = log.type === 'Pemasukan' ? (log.method || 'Cash') : '-';
+
+        let displayDesc = log.desc;
+        if (log.type === 'Pemasukan' && log.items && log.items.length > 0) {
+            displayDesc = log.items.map(i => `${i.name} (x${i.quantity})`).join(', ');
         }
 
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
-            const existing = cart.find(item => item.product.id === productId);
-            if (existing) { existing.quantity++; } else { cart.push({ product, quantity: 1 }); }
-            renderCart();
+        tr.innerHTML = `
+            <td class="p-2.5 text-slate-400">${log.time}</td>
+            <td class="p-2.5 font-sans text-slate-800">${displayDesc}</td>
+            <td class="p-2.5 font-sans font-bold text-slate-600">${methodLabel}</td>
+            <td class="p-2.5 text-right font-bold ${log.type === 'Pemasukan' ? 'text-emerald-600' : 'text-rose-600'}">${log.type === 'Pemasukan' ? '+' : '-'} ${formatRupiah(log.amount)}</td>`;
+        tbody.appendChild(tr);
+    });
+    
+    const net = totalIncome - totalExpense;
+    document.getElementById("report-income").innerText = formatRupiah(totalIncome);
+    document.getElementById("report-cash-income").innerText = formatRupiah(cashIncome);
+    document.getElementById("report-qris-income").innerText = formatRupiah(qrisIncome);
+    document.getElementById("report-expense").innerText = formatRupiah(totalExpense);
+    document.getElementById("report-net").innerText = formatRupiah(net);
+    document.getElementById("report-net").className = net < 0 ? "text-xl font-bold font-mono text-rose-600 mt-1" : "text-xl font-bold font-mono text-accentblue mt-1";
+
+    const topContainer = document.getElementById("top-products-container");
+    topContainer.innerHTML = "";
+    const todayItems = getTodayCalculatedItems(todayStr);
+    const itemKeys = Object.keys(todayItems);
+
+    if (itemKeys.length === 0) {
+        topContainer.innerHTML = `<div class="text-slate-400 py-2 text-center text-[11px]">Belum ada item terjual hari ini.</div>`;
+    } else {
+        itemKeys.forEach(name => {
+            const div = document.createElement("div");
+            div.className = "flex justify-between items-center bg-slate-50 border border-slate-200 p-2 rounded-lg";
+            div.innerHTML = `<span class="text-slate-700 font-medium">${name}</span><span class="bg-sky-100 text-sky-700 font-bold px-2 py-0.5 rounded text-[10px]">x${todayItems[name]} Porsi</span>`;
+            topContainer.appendChild(div);
+        });
+    }
+}
+
+function handleCreateExpense(e) {
+    e.preventDefault();
+    const desc = document.getElementById("exp-desc").value;
+    const amount = parseFloat(document.getElementById("exp-amount").value) || 0;
+    const currentDateStr = new Date().toLocaleDateString('id-ID');
+
+    financialLogs.unshift({ 
+        id: Date.now(), 
+        date: currentDateStr,
+        time: new Date().toLocaleTimeString('id-ID'), 
+        desc, 
+        type: 'Pengeluaran', 
+        amount 
+    });
+    syncStorage(); document.getElementById("exp-desc").value = ""; document.getElementById("exp-amount").value = "";
+    renderFinancialView(); alert("Pengeluaran berhasil dicatat!");
+}
+
+function exportTodayToWhatsApp() {
+    const todayStr = new Date().toLocaleDateString('id-ID');
+    const todayLogs = financialLogs.filter(log => log.date === todayStr);
+    
+    let totalIncome = 0, cashIncome = 0, qrisIncome = 0, totalExpense = 0;
+    todayLogs.forEach(log => {
+        if (log.type === 'Pemasukan') {
+            totalIncome += log.amount;
+            if (log.method === 'QRIS') qrisIncome += log.amount;
+            else cashIncome += log.amount;
+        } else if (log.type === 'Pengeluaran') {
+            totalExpense += log.amount;
         }
+    });
+    const net = totalIncome - totalExpense;
 
-        function updateCartQty(id, delta) {
-            const item = cart.find(i => i.product.id === id);
-            if (!item) return;
-            item.quantity += delta;
-            if (item.quantity <= 0) cart = cart.filter(i => i.product.id !== id);
-            renderCart();
-        }
-
-        function clearCart() { cart = []; renderCart(); }
-
-        function renderCart() {
-            const container = document.getElementById("cart-items");
-            container.innerHTML = "";
-            if (cart.length === 0) {
-                container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-10 text-center"><p class="text-xs">Keranjang kosong</p></div>`;
-                calculateTotals();
-                return;
+    let msg = `*REKAP TOTAL PEMBELIAN & FINANSIAL BJEK HARI INI*\n`;
+    msg += `Tanggal Laporan: ${todayStr}\n`;
+    msg += `============================\n`;
+    msg += `*1. TOTAL OMSET:* ${formatRupiah(totalIncome)}\n`;
+    msg += `   - Nominal Tunai/Cash: ${formatRupiah(cashIncome)}\n`;
+    msg += `   - Nominal QRIS Pay: ${formatRupiah(qrisIncome)}\n`;
+    msg += `*2. TOTAL PENGELUARAN:* ${formatRupiah(totalExpense)}\n`;
+    msg += `============================\n`;
+    msg += `*LABA KAS BERSIH:* *${formatRupiah(net)}*\n\n`;
+    
+    msg += `*📦 QUANTITY MENU TERJUAL HARI INI:*\n`;
+    const todayItems = getTodayCalculatedItems(todayStr);
+    const itemKeys = Object.keys(todayItems);
+    if (itemKeys.length === 0) {
+        msg += `(Belum ada produk kuliner terjual)\n`;
+    } else {
+        itemKeys.forEach(name => {
+            msg += `- ${name} : (x${todayItems[name]} porsi)\n`;
+        });
+    }
+    msg += `\n_Daftar Mutasi Penjualan & Pengeluaran:_\n`;
+    
+    if (todayLogs.length === 0) {
+        msg += `(Belum ada data transaksi untuk hari ini)\n`;
+    } else {
+        todayLogs.forEach(log => {
+            const sign = log.type === 'Pemasukan' ? '📈 Masuk' : '📉 Keluar';
+            const meth = log.type === 'Pemasukan' ? ` (${log.method || 'Cash'})` : '';
+            
+            let displayDesc = log.desc;
+            if (log.type === 'Pemasukan' && log.items && log.items.length > 0) {
+                displayDesc = log.items.map(i => `${i.name} (x${i.quantity})`).join(', ');
             }
-            cart.forEach(item => {
-                const row = document.createElement("div");
-                row.className = "flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-xl space-x-2";
-                row.innerHTML = `
-                    <div class="flex-1 min-w-0 text-xs">
-                        <h5 class="font-bold text-slate-800 truncate">${item.product.name}</h5>
-                        <p class="font-mono text-slate-500 text-[10px]">${formatRupiah(item.product.price)}</p>
-                    </div>
-                    <div class="flex items-center bg-white border border-slate-300 rounded-lg p-0.5 text-xs">
-                        <button onclick="updateCartQty(${item.product.id}, -1)" class="w-5 h-5 font-bold text-slate-500 hover:text-rose-600">-</button>
-                        <span class="w-5 text-center font-mono font-bold text-slate-800">${item.quantity}</span>
-                        <button onclick="updateCartQty(${item.product.id}, 1)" class="w-5 h-5 font-bold text-slate-500 hover:text-accentblue">+</button>
-                    </div>`;
-                container.appendChild(row);
-            });
-            calculateTotals();
+            
+            msg += `- [${log.time}] ${sign} - ${displayDesc}${meth}: *${formatRupiah(log.amount)}*\n`;
+        });
+    }
+    
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function exportTodayToPDF() {
+    const todayStr = new Date().toLocaleDateString('id-ID');
+    const todayLogs = financialLogs.filter(log => log.date === todayStr);
+    
+    let totalIncome = 0, cashIncome = 0, qrisIncome = 0, totalExpense = 0;
+    let logRowsHtml = "";
+    
+    todayLogs.forEach(log => {
+        if (log.type === 'Pemasukan') {
+            totalIncome += log.amount;
+            if (log.method === 'QRIS') qrisIncome += log.amount;
+            else cashIncome += log.amount;
+        } else if (log.type === 'Pengeluaran') {
+            totalExpense += log.amount;
         }
-
-        function processCheckout() {
-            if (cart.length === 0) return alert("Pilih menu terlebih dahulu!");
-            const data = calculateTotals();
-            if (data.cash < data.total) return alert("Uang pembayaran tidak cukup!");
-
-            const invoiceId = "BJK-" + Date.now().toString().slice(-6);
-            const currentDateStr = new Date().toLocaleDateString('id-ID');
-
-            activeCheckoutData = {
-                invoice: invoiceId, date: new Date().toLocaleString('id-ID'), items: [...cart],
-                subtotal: data.subtotal, discount: data.disc, total: data.total, cash: data.cash, change: data.change, method: data.method
-            };
-
-            // PERBAIKAN: Menyimpan snapshot item belanja ke dalam database log
-            financialLogs.unshift({
-                id: Date.now(), 
-                date: currentDateStr,
-                time: new Date().toLocaleTimeString('id-ID'),
-                desc: `Penjualan Kasir (${invoiceId})`, 
-                type: 'Pemasukan', 
-                method: data.method, 
-                amount: data.total,
-                items: cart.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price }))
-            });
-            syncStorage();
-
-            const manifestDiv = document.getElementById("manifest-summary");
-            let itemsText = "";
-            activeCheckoutData.items.forEach(i => {
-                itemsText += `<div class="flex justify-between"><span>${i.product.name} x${i.quantity}</span><span>${formatRupiah(i.product.price * i.quantity)}</span></div>`;
-            });
-
-            manifestDiv.innerHTML = `
-                <div class="text-center font-bold text-slate-900 mb-1 border-b border-slate-200 pb-1">BJEK POS RECEIPT</div>
-                <div class="text-[10px] text-slate-500 mb-2">Inv: ${activeCheckoutData.invoice}<br>Metode: ${activeCheckoutData.method}<br>Waktu: ${activeCheckoutData.date}</div>
-                <div class="space-y-1 border-b border-dashed border-slate-300 pb-2 mb-2 text-[11px]">${itemsText}</div>
-                <div class="flex justify-between font-bold text-accentblue"><span>Total Akhir:</span><span>${formatRupiah(activeCheckoutData.total)}</span></div>
-                <div class="flex justify-between font-bold text-emerald-600 pt-1"><span>Bayar (${activeCheckoutData.method}):</span><span>${formatRupiah(activeCheckoutData.cash)}</span></div>
-            `;
-
-            const modal = document.getElementById("invoice-modal");
-            modal.classList.remove("hidden");
-            setTimeout(() => { modal.classList.remove("opacity-0"); }, 50);
-        }
-
-        function closeInvoiceModal() {
-            const modal = document.getElementById("invoice-modal");
-            modal.classList.add("opacity-0");
-            setTimeout(() => { modal.classList.add("hidden"); resetTransaction(); }, 300);
-        }
-
-        function resetTransaction() {
-            document.getElementById("cash-input").value = "";
-            document.getElementById("discount-input").value = "0";
-            document.getElementById("payment-method").value = "Cash";
-            handlePaymentMethodChange();
-            clearCart();
-        }
-
-        function exportToWhatsApp() {
-            if (!activeCheckoutData) return;
-            let msg = `*BJEK POS SYSTEM - NOTA BELANJA*\n`;
-            msg += `Invoice: \`${activeCheckoutData.invoice}\` (${activeCheckoutData.method})\n`;
-            msg += `============================\n`;
-            activeCheckoutData.items.forEach(i => { msg += `- *${i.product.name}* (x${i.quantity}) : ${formatRupiah(i.product.price * i.quantity)}\n`; });
-            msg += `============================\n`;
-            msg += `*TOTAL AKHIR:* *${formatRupiah(activeCheckoutData.total)}*\n`;
-            msg += `_Terima kasih telah berbelanja!_`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        function exportToPDF() {
-            if (!activeCheckoutData) return;
-            const printArea = document.getElementById("print-receipt-area");
-            let itemsHtml = "";
-            activeCheckoutData.items.forEach(i => {
-                itemsHtml += `<tr style="border-bottom: 1px dashed #ccc;"><td style="padding: 4px 0;">${i.product.name}<br><small>x${i.quantity}</small></td><td style="text-align: right;">${formatRupiah(i.product.price * i.quantity)}</td></tr>`;
-            });
-            printArea.innerHTML = `
-                <div style="text-align: center; font-family: monospace; font-size: 12px; color: black;">
-                    <h2>BJEK KASIR</h2><hr style="border-top: 1px dashed black;">
-                    <div style="text-align: left;">Inv: ${activeCheckoutData.invoice}<br>Metode: ${activeCheckoutData.method}<br>Waktu: ${activeCheckoutData.date}</div>
-                    <table style="width: 100%; border-collapse: collapse;">${itemsHtml}</table><hr style="border-top: 1px dashed black;">
-                    <table style="width: 100%;">
-                        <tr><td>Total Akhir</td><td style="text-align: right; font-weight: bold;">${formatRupiah(activeCheckoutData.total)}</td></tr>
-                    </table>
-                </div>`;
-            window.print();
-        }
-
-        function renderManagementTable() {
-            const tbody = document.getElementById("management-table-body");
-            tbody.innerHTML = "";
-            document.getElementById("management-count").innerText = `${products.length} Menu`;
-            products.forEach((product) => {
-                const tr = document.createElement("tr");
-                tr.className = "border-b border-slate-200 hover:bg-slate-50 transition";
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-slate-800">${product.name}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 text-[10px] bg-slate-100 border border-slate-200 rounded-full text-slate-600">${product.category}</span></td>
-                    <td class="p-3 text-right font-mono font-bold text-accentblue">${formatRupiah(product.price)}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="handleDeleteProduct(${product.id})" class="p-1.5 text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition">Hapus</button>
-                    </td>`;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function handleCreateProduct(e) {
-            e.preventDefault();
-            const name = document.getElementById("form-name").value;
-            const price = parseFloat(document.getElementById("form-price").value) || 0;
-            const category = document.getElementById("form-category").value;
-            const image = document.getElementById("form-image").value || "";
-            products.push({ id: Date.now(), name, price, category, image });
-            syncStorage(); document.getElementById("add-product-form").reset();
-            renderManagementTable(); alert(`Sukses menambahkan "${name}"!`);
-        }
-
-        function handleDeleteProduct(productId) {
-            if (!confirm("Hapus item menu ini?")) return;
-            products = products.filter(p => p.id !== productId); syncStorage(); renderManagementTable();
-        }
-
-        // ======================= ENGINE REKAP KEUANGAN & PERBAIKAN REKAP HARIAN =======================
+        const methodLabel = log.type === 'Pemasukan' ? (log.method || 'Cash') : '-';
+        const sign = log.type === 'Pemasukan' ? '+' : '-';
+        const color = log.type === 'Pemasukan' ? 'color: #10b981;' : 'color: #ef4444;';
         
-        // Fungsi pembantu mengakulasi daftar menu yang terjual sepanjang hari ini
-        function getTodayCalculatedItems(todayStr) {
-            const todayLogs = financialLogs.filter(log => log.date === todayStr);
-            let summaryItems = {};
-            todayLogs.forEach(log => {
-                if (log.items && log.type === 'Pemasukan') {
-                    log.items.forEach(item => {
-                        if (summaryItems[item.name]) {
-                            summaryItems[item.name] += item.quantity;
-                        } else {
-                            summaryItems[item.name] = item.quantity;
-                        }
-                    });
-                }
-            });
-            return summaryItems;
+        let displayDesc = log.desc;
+        if (log.type === 'Pemasukan' && log.items && log.items.length > 0) {
+            displayDesc = log.items.map(i => `${i.name} (x${i.quantity})`).join(', ');
         }
+        
+        logRowsHtml += `<tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 6px; text-align: left;">${log.time}</td>
+            <td style="padding: 6px; text-align: left; font-family: sans-serif; max-width: 200px; word-wrap: break-word;">${displayDesc}</td>
+            <td style="padding: 6px; text-align: center;">${methodLabel}</td>
+            <td style="padding: 6px; text-align: right; font-weight: bold; ${color}">${sign} ${formatRupiah(log.amount)}</td>
+        </tr>`;
+    });
+    const net = totalIncome - totalExpense;
 
-        function renderFinancialView() {
-            let totalIncome = 0, totalExpense = 0;
-            let cashIncome = 0, qrisIncome = 0;
-            const todayStr = new Date().toLocaleDateString('id-ID');
+    let itemRowsHtml = "";
+    const todayItems = getTodayCalculatedItems(todayStr);
+    const itemKeys = Object.keys(todayItems);
+    
+    if (itemKeys.length === 0) {
+        itemRowsHtml = `<tr><td colspan="2" style="text-align: center; padding: 6px; color:#888;">Belum ada menu kuliner yang terjual</td></tr>`;
+    } else {
+        itemKeys.forEach(name => {
+            itemRowsHtml += `<tr style="border-bottom: 1px dashed #cbd5e1;">
+                <td style="padding: 6px; text-align: left; font-weight: 500;">${name}</td>
+                <td style="padding: 6px; text-align: right; font-weight: bold; color: #0ea5e9;">x${todayItems[name]} Porsi</td>
+            </tr>`;
+        });
+    }
 
-            const tbody = document.getElementById("financial-table-body");
-            tbody.innerHTML = "";
+    const printArea = document.getElementById("print-receipt-area");
+    printArea.innerHTML = `
+        <div style="font-family: monospace; font-size: 12px; color: black; max-width: 100%; padding: 10px;">
+            <h2 style="text-align: center; margin-bottom: 2px; font-family: sans-serif;">BJEK POS SYSTEM</h2>
+            <p style="text-align: center; margin-top: 0; font-size: 11px;">REKAP TRANSAKSI HARIAN</p>
+            <hr style="border-top: 1px dashed black;">
+            <table style="width: 100%; margin-bottom: 12px; font-size: 11px;">
+                <tr><td>Hari/Tanggal</td><td>: ${todayStr}</td></tr>
+                <tr><td>Total Pendapatan</td><td>: <b>${formatRupiah(totalIncome)}</b><br>&nbsp;&nbsp;• Cash: ${formatRupiah(cashIncome)}<br>&nbsp;&nbsp;• QRIS: ${formatRupiah(qrisIncome)}</td></tr>
+                <tr><td>Total Biaya Kas</td><td>: <b>${formatRupiah(totalExpense)}</b></td></tr>
+                <tr style="font-size: 13px;"><td><b>Laba Kas Bersih</b></td><td>: <b>${formatRupiah(net)}</b></td></tr>
+            </table>
             
-            financialLogs.forEach(log => {
-                if (log.type === 'Pemasukan') {
-                    totalIncome += log.amount;
-                    if (log.method === 'QRIS') { qrisIncome += log.amount; } 
-                    else { cashIncome += log.amount; }
-                }
-                if (log.type === 'Pengeluaran') totalExpense += log.amount;
+            <hr style="border-top: 1px dashed black;">
+            <h4 style="margin: 8px 0 4px 0; font-family: sans-serif; color:#0f172a;">📦 Kuantitas Menu Terjual Hari Ini:</h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px;">
+                <thead>
+                    <tr style="background: #f1f5f9; border-bottom: 1px solid #94a3b8;">
+                        <th style="padding: 5px; text-align: left;">Nama Produk / Menu</th>
+                        <th style="padding: 5px; text-align: right;">Total Kuantitas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemRowsHtml}
+                </tbody>
+            </table>
 
-                const tr = document.createElement("tr");
-                tr.className = "border-b border-slate-200 hover:bg-slate-50/80 transition";
-                const methodLabel = log.type === 'Pemasukan' ? (log.method || 'Cash') : '-';
+            <hr style="border-top: 1px dashed black;">
+            <h4 style="margin: 8px 0 4px 0; font-family: sans-serif;">Rincian Log Pembelian/Mutasi Kas:</h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                <thead>
+                    <tr style="background: #f1f5f9; border-bottom: 1px solid black;">
+                        <th style="padding: 5px; text-align: left;">Jam</th>
+                        <th style="padding: 5px; text-align: left;">Keterangan</th>
+                        <th style="padding: 5px; text-align: center;">Metode</th>
+                        <th style="padding: 5px; text-align: right;">Jumlah</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${logRowsHtml || '<tr><td colspan="4" style="text-align:center; padding: 10px;">Belum ada log transaksi hari ini</td></tr>'}
+                </tbody>
+            </table>
+            <hr style="border-top: 1px dashed black; margin-top: 15px;">
+            <p style="text-align: center; font-size: 9px; color: #555;">Dicetak otomatis melalui Aplikasi POS Bjek Pro</p>
+        </div>`;
+    window.print();
+}
 
-                tr.innerHTML = `
-                    <td class="p-2.5 text-slate-400">${log.time}</td>
-                    <td class="p-2.5 font-sans text-slate-800">${log.desc}</td>
-                    <td class="p-2.5 font-sans font-bold text-slate-600">${methodLabel}</td>
-                    <td class="p-2.5 text-right font-bold ${log.type === 'Pemasukan' ? 'text-emerald-600' : 'text-rose-600'}">${log.type === 'Pemasukan' ? '+' : '-'} ${formatRupiah(log.amount)}</td>`;
-                tbody.appendChild(tr);
-            });
-            
-            const net = totalIncome - totalExpense;
-            document.getElementById("report-income").innerText = formatRupiah(totalIncome);
-            document.getElementById("report-cash-income").innerText = formatRupiah(cashIncome);
-            document.getElementById("report-qris-income").innerText = formatRupiah(qrisIncome);
-            document.getElementById("report-expense").innerText = formatRupiah(totalExpense);
-            document.getElementById("report-net").innerText = formatRupiah(net);
-            document.getElementById("report-net").className = net < 0 ? "text-xl font-bold font-mono text-rose-600 mt-1" : "text-xl font-bold font-mono text-accentblue mt-1";
+function clearFinancialLogs() {
+    if (!confirm("Hapus seluruh log keuangan?")) return;
+    financialLogs = []; syncStorage(); renderFinancialView();
+}
 
-            // Render daftar kuantitas menu terlaris hari ini pada layar dashboard laporan
-            const topContainer = document.getElementById("top-products-container");
-            topContainer.innerHTML = "";
-            const todayItems = getTodayCalculatedItems(todayStr);
-            const itemKeys = Object.keys(todayItems);
-
-            if (itemKeys.length === 0) {
-                topContainer.innerHTML = `<div class="text-slate-400 py-2 text-center text-[11px]">Belum ada item terjual hari ini.</div>`;
-            } else {
-                itemKeys.forEach(name => {
-                    const div = document.createElement("div");
-                    div.className = "flex justify-between items-center bg-slate-50 border border-slate-200 p-2 rounded-lg";
-                    div.innerHTML = `<span class="text-slate-700 font-medium">${name}</span><span class="bg-sky-100 text-sky-700 font-bold px-2 py-0.5 rounded text-[10px]">x${todayItems[name]} Porsi</span>`;
-                    topContainer.appendChild(div);
-                });
-            }
-        }
-
-        function handleCreateExpense(e) {
-            e.preventDefault();
-            const desc = document.getElementById("exp-desc").value;
-            const amount = parseFloat(document.getElementById("exp-amount").value) || 0;
-            const currentDateStr = new Date().toLocaleDateString('id-ID');
-
-            financialLogs.unshift({ 
-                id: Date.now(), 
-                date: currentDateStr,
-                time: new Date().toLocaleTimeString('id-ID'), 
-                desc, 
-                type: 'Pengeluaran', 
-                amount 
-            });
-            syncStorage(); document.getElementById("exp-desc").value = ""; document.getElementById("exp-amount").value = "";
-            renderFinancialView(); alert("Pengeluaran berhasil dicatat!");
-        }
-
-        // 🟢 PERBAIKAN: EKSPOR REKAP HARIAN KE WHATSAPP (Anti-Bug & Input Menu Terjual)
-        function exportTodayToWhatsApp() {
-            const todayStr = new Date().toLocaleDateString('id-ID');
-            const todayLogs = financialLogs.filter(log => log.date === todayStr);
-            
-            let totalIncome = 0, cashIncome = 0, qrisIncome = 0, totalExpense = 0;
-            todayLogs.forEach(log => {
-                if (log.type === 'Pemasukan') {
-                    totalIncome += log.amount;
-                    if (log.method === 'QRIS') qrisIncome += log.amount;
-                    else cashIncome += log.amount;
-                } else if (log.type === 'Pengeluaran') {
-                    totalExpense += log.amount;
-                }
-            });
-            const net = totalIncome - totalExpense;
-
-            let msg = `*REKAP TOTAL PEMBELIAN & FINANSIAL BJEK HARI INI*\n`;
-            msg += `Tanggal Laporan: ${todayStr}\n`;
-            msg += `============================\n`;
-            msg += `*1. TOTAL OMSET:* ${formatRupiah(totalIncome)}\n`;
-            msg += `   - Nominal Tunai/Cash: ${formatRupiah(cashIncome)}\n`;
-            msg += `   - Nominal QRIS Pay: ${formatRupiah(qrisIncome)}\n`;
-            msg += `*2. TOTAL PENGELUARAN:* ${formatRupiah(totalExpense)}\n`;
-            msg += `============================\n`;
-            msg += `*LABA KAS BERSIH:* *${formatRupiah(net)}*\n\n`;
-            
-            // Tambahan list menu terjual biar tidak bingung di WA
-            msg += `*📦 QUANTITY MENU TERJUAL HARI INI:*\n`;
-            const todayItems = getTodayCalculatedItems(todayStr);
-            const itemKeys = Object.keys(todayItems);
-            if (itemKeys.length === 0) {
-                msg += `(Belum ada produk kuliner terjual)\n`;
-            } else {
-                itemKeys.forEach(name => {
-                    msg += `- ${name} : (x${todayItems[name]} porsi)\n`;
-                });
-            }
-            msg += `\n_Daftar Mutasi Penjualan & Pengeluaran:_\n`;
-            
-            if (todayLogs.length === 0) {
-                msg += `(Belum ada data transaksi untuk hari ini)\n`;
-            } else {
-                todayLogs.forEach(log => {
-                    const sign = log.type === 'Pemasukan' ? '📈 Masuk' : '📉 Keluar';
-                    const meth = log.type === 'Pemasukan' ? ` (${log.method || 'Cash'})` : '';
-                    msg += `- [${log.time}] ${sign} - ${log.desc}${meth}: *${formatRupiah(log.amount)}*\n`;
-                });
-            }
-            
-            // Menggunakan encodeURIComponent terbungkus utuh agar bebas dari bug string kosong di WhatsApp
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        // 🔵 PERBAIKAN: CETAK REKAP HARIAN KE PDF (Ditambahkan List Menu Makanan Agar Tidak Bingung)
-        function exportTodayToPDF() {
-            const todayStr = new Date().toLocaleDateString('id-ID');
-            const todayLogs = financialLogs.filter(log => log.date === todayStr);
-            
-            let totalIncome = 0, cashIncome = 0, qrisIncome = 0, totalExpense = 0;
-            let logRowsHtml = "";
-            
-            todayLogs.forEach(log => {
-                if (log.type === 'Pemasukan') {
-                    totalIncome += log.amount;
-                    if (log.method === 'QRIS') qrisIncome += log.amount;
-                    else cashIncome += log.amount;
-                } else if (log.type === 'Pengeluaran') {
-                    totalExpense += log.amount;
-                }
-                const methodLabel = log.type === 'Pemasukan' ? (log.method || 'Cash') : '-';
-                const sign = log.type === 'Pemasukan' ? '+' : '-';
-                const color = log.type === 'Pemasukan' ? 'color: #10b981;' : 'color: #ef4444;';
-                
-                logRowsHtml += `<tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 6px; text-align: left;">${log.time}</td>
-                    <td style="padding: 6px; text-align: left; font-family: sans-serif;">${log.desc}</td>
-                    <td style="padding: 6px; text-align: center;">${methodLabel}</td>
-                    <td style="padding: 6px; text-align: right; font-weight: bold; ${color}">${sign} ${formatRupiah(log.amount)}</td>
-                </tr>`;
-            });
-            const net = totalIncome - totalExpense;
-
-            // Generate baris untuk tabel baru menu makanan terjual
-            let itemRowsHtml = "";
-            const todayItems = getTodayCalculatedItems(todayStr);
-            const itemKeys = Object.keys(todayItems);
-            
-            if (itemKeys.length === 0) {
-                itemRowsHtml = `<tr><td colspan="2" style="text-align: center; padding: 6px; color:#888;">Belum ada menu kuliner yang terjual</td></tr>`;
-            } else {
-                itemKeys.forEach(name => {
-                    itemRowsHtml += `<tr style="border-bottom: 1px dashed #cbd5e1;">
-                        <td style="padding: 6px; text-align: left; font-weight: 500;">${name}</td>
-                        <td style="padding: 6px; text-align: right; font-weight: bold; color: #0ea5e9;">x${todayItems[name]} Porsi</td>
-                    </tr>`;
-                });
-            }
-
-            const printArea = document.getElementById("print-receipt-area");
-            printArea.innerHTML = `
-                <div style="font-family: monospace; font-size: 12px; color: black; max-width: 100%; padding: 10px;">
-                    <h2 style="text-align: center; margin-bottom: 2px; font-family: sans-serif;">BJEK POS SYSTEM</h2>
-                    <p style="text-align: center; margin-top: 0; font-size: 11px;">REKAP TRANSAKSI HARIAN</p>
-                    <hr style="border-top: 1px dashed black;">
-                    <table style="width: 100%; margin-bottom: 12px; font-size: 11px;">
-                        <tr><td>Hari/Tanggal</td><td>: ${todayStr}</td></tr>
-                        <tr><td>Total Pendapatan</td><td>: <b>${formatRupiah(totalIncome)}</b><br>&nbsp;&nbsp;• Cash: ${formatRupiah(cashIncome)}<br>&nbsp;&nbsp;• QRIS: ${formatRupiah(qrisIncome)}</td></tr>
-                        <tr><td>Total Biaya Kas</td><td>: <b>${formatRupiah(totalExpense)}</b></td></tr>
-                        <tr style="font-size: 13px;"><td><b>Laba Kas Bersih</b></td><td>: <b>${formatRupiah(net)}</b></td></tr>
-                    </table>
-                    
-                    <!-- TABEL TAMBAHAN BARU: ITEM MENU TERJUAL AGAR TIDAK BINGUNG -->
-                    <hr style="border-top: 1px dashed black;">
-                    <h4 style="margin: 8px 0 4px 0; font-family: sans-serif; color:#0f172a;">📦 Kuantitas Menu Terjual Hari Ini:</h4>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px;">
-                        <thead>
-                            <tr style="background: #f1f5f9; border-bottom: 1px solid #94a3b8;">
-                                <th style="padding: 5px; text-align: left;">Nama Produk / Menu</th>
-                                <th style="padding: 5px; text-align: right;">Total Kuantitas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemRowsHtml}
-                        </tbody>
-                    </table>
-
-                    <hr style="border-top: 1px dashed black;">
-                    <h4 style="margin: 8px 0 4px 0; font-family: sans-serif;">Rincian Log Pembelian/Mutasi Kas:</h4>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-                        <thead>
-                            <tr style="background: #f1f5f9; border-bottom: 1px solid black;">
-                                <th style="padding: 5px; text-align: left;">Jam</th>
-                                <th style="padding: 5px; text-align: left;">Keterangan</th>
-                                <th style="padding: 5px; text-align: center;">Metode</th>
-                                <th style="padding: 5px; text-align: right;">Jumlah</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${logRowsHtml || '<tr><td colspan="4" style="text-align:center; padding: 10px;">Belum ada log transaksi hari ini</td></tr>'}
-                        </tbody>
-                    </table>
-                    <hr style="border-top: 1px dashed black; margin-top: 15px;">
-                    <p style="text-align: center; font-size: 9px; color: #555;">Dicetak otomatis melalui Aplikasi POS Bjek Pro</p>
-                </div>`;
-            window.print();
-        }
-
-        function clearFinancialLogs() {
-            if (!confirm("Hapus seluruh log keuangan?")) return;
-            financialLogs = []; syncStorage(); renderFinancialView();
-        }
-
-        setInterval(() => { document.getElementById("current-time").innerText = new Date().toLocaleTimeString('id-ID', { hour12: false }); }, 1000);
-        window.onload = () => { renderProductsGrid(); };
-    </script>
+setInterval(() => { document.getElementById("current-time").innerText = new Date().toLocaleTimeString('id-ID', { hour12: false }); }, 1000);
+window.onload = () => { renderProductsGrid(); };
+</script>
 </body>
 </html>
