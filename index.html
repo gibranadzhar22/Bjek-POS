@@ -103,7 +103,7 @@
                     <button onclick="clearCart()" class="text-xs text-rose-600 hover:text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 transition">Hapus Semua</button>
                 </div>
 
-                <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[180px]">
+                <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[150px]">
                     </div>
 
                 <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-3.5">
@@ -120,7 +120,15 @@
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Jumlah Uang Tunai (Cash)</label>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Metode Pembayaran</label>
+                        <select id="payment-method" onchange="handlePaymentMethodChange()" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-accentblue font-medium">
+                            <option value="Cash">Tunai / Cash</option>
+                            <option value="QRIS">QRIS / Digital Pay</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label id="cash-label" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Jumlah Uang Tunai (Cash)</label>
                         <div class="relative">
                             <span class="absolute left-3 top-2 text-sm text-slate-400 font-bold">Rp</span>
                             <input type="number" id="cash-input" oninput="calculateTotals()" placeholder="0" 
@@ -128,8 +136,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kembalian</span>
+                    <div id="change-box" class="bg-white p-2.5 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
+                        <span id="change-label" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kembalian</span>
                         <span id="change-display" class="font-mono text-base font-bold text-emerald-600">Rp 0</span>
                     </div>
 
@@ -175,7 +183,7 @@
                     </button>
                 </form>
             </div>
-
+            
             <div class="lg:col-span-2 bg-darkcard p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <h3 class="text-base font-bold text-slate-800 mb-4 flex justify-between items-center">
                     <span>Daftar Menu Aktif Bjek</span>
@@ -199,15 +207,22 @@
         </div>
                 <div id="view-laporan" class="hidden space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm">
-                    <div>
-                        <p class="text-xs font-mono uppercase text-slate-500 tracking-wider">Total Omset Pemasukan</p>
-                        <h3 id="report-income" class="text-xl font-bold font-mono text-emerald-600 mt-1">Rp 0</h3>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-between shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-mono uppercase text-slate-500 tracking-wider">Total Omset Pendapatan</p>
+                            <h3 id="report-income" class="text-xl font-bold font-mono text-emerald-600 mt-1">Rp 0</h3>
+                        </div>
+                        <div class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 text-emerald-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        </div>
                     </div>
-                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-emerald-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <div class="pt-2 border-t border-slate-100 grid grid-cols-2 text-[11px] font-mono text-slate-600">
+                        <div>Tunai/Cash: <span id="report-cash-income" class="block font-bold text-slate-800">Rp 0</span></div>
+                        <div class="border-l border-slate-200 pl-3">QRIS Pay: <span id="report-qris-income" class="block font-bold text-accentblue">Rp 0</span></div>
                     </div>
                 </div>
+
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm">
                     <div>
                         <p class="text-xs font-mono uppercase text-slate-500 tracking-wider">Total Biaya Pengeluaran</p>
@@ -217,6 +232,7 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"></path></svg>
                     </div>
                 </div>
+
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm">
                     <div>
                         <p class="text-xs font-mono uppercase text-slate-500 tracking-wider">Laba Bersih Kas</p>
@@ -257,7 +273,7 @@
                                 <tr>
                                     <th class="p-2.5">Waktu</th>
                                     <th class="p-2.5">Keterangan</th>
-                                    <th class="p-2.5">Tipe</th>
+                                    <th class="p-2.5">Metode</th>
                                     <th class="p-2.5 text-right">Jumlah Tunai</th>
                                 </tr>
                             </thead>
@@ -298,8 +314,7 @@
     </div>
 
     <div id="print-receipt-area" class="hidden"></div>
-
-    <script>
+        <script>
         // Database Lokal Awal Produk (Default)
         const defaultProducts = [
             { id: 1, name: "Es Kopi Aren Premium", price: 18000, category: "Minuman", image: "" },
@@ -339,14 +354,56 @@
         function formatRupiah(num) {
             return "Rp " + new Intl.NumberFormat("id-ID").format(num);
         }
-                // === ENGINE TAB 1: LOGIKA INTEGRASI KASIR ===
+
+        // === ENGINE KASIR & LOGIKA METODE PEMBAYARAN ===
+        function handlePaymentMethodChange() {
+            const method = document.getElementById("payment-method").value;
+            const cashInput = document.getElementById("cash-input");
+            const changeBox = document.getElementById("change-box");
+
+            if (method === "QRIS") {
+                // Jika QRIS, otomatis set uang tunai pas dengan total tagihan, sembunyikan kotak kembalian
+                let subtotal = 0;
+                cart.forEach(i => subtotal += (i.product.price * i.quantity));
+                const disc = Math.min(100, Math.max(0, parseFloat(document.getElementById("discount-input").value) || 0));
+                const total = subtotal - (subtotal * (disc / 100));
+
+                cashInput.value = total;
+                cashInput.disabled = true; // Kunci agar tidak perlu input manual
+                document.getElementById("cash-label").innerText = "Nominal Bayar QRIS (Otomatis)";
+                changeBox.classList.add("hidden");
+            } else {
+                cashInput.value = "";
+                cashInput.disabled = false;
+                document.getElementById("cash-label").innerText = "Jumlah Uang Tunai (Cash)";
+                changeBox.classList.remove("hidden");
+            }
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            let subtotal = 0;
+            cart.forEach(i => subtotal += (i.product.price * i.quantity));
+            const disc = Math.min(100, Math.max(0, parseFloat(document.getElementById("discount-input").value) || 0));
+            const total = subtotal - (subtotal * (disc / 100));
+            const method = document.getElementById("payment-method").value;
+            
+            let cash = parseFloat(document.getElementById("cash-input").value) || 0;
+            if (method === "QRIS") { cash = total; }
+            
+            const change = cash > total ? cash - total : 0;
+
+            document.getElementById("summary-subtotal").innerText = formatRupiah(subtotal);
+            document.getElementById("summary-total").innerText = formatRupiah(total);
+            document.getElementById("change-display").innerText = formatRupiah(change);
+            return { subtotal, total, cash, change, disc, method };
+        }
+
         function renderProductsGrid(filteredArray = products) {
             const grid = document.getElementById("products-grid");
             grid.innerHTML = "";
             let displayList = filteredArray;
-            if (activeCategory !== "Semua") {
-                displayList = displayList.filter(p => p.category === activeCategory);
-            }
+            if (activeCategory !== "Semua") { displayList = displayList.filter(p => p.category === activeCategory); }
             if (displayList.length === 0) {
                 grid.innerHTML = `<div class="col-span-full py-12 text-center text-xs text-slate-400">Tidak ada item menu ditemukan.</div>`;
                 return;
@@ -368,8 +425,7 @@
                         <button onclick="addToCart(${product.id})" class="w-full py-1.5 bg-slate-50 hover:bg-accentblue hover:text-white border border-slate-200 text-slate-700 font-bold text-xs rounded-lg transition">
                             + Masukkan
                         </button>
-                    </div>
-                `;
+                    </div>`;
                 grid.appendChild(card);
             });
         }
@@ -410,20 +466,6 @@
 
         function clearCart() { cart = []; renderCart(); }
 
-        function calculateTotals() {
-            let subtotal = 0;
-            cart.forEach(i => subtotal += (i.product.price * i.quantity));
-            const disc = Math.min(100, Math.max(0, parseFloat(document.getElementById("discount-input").value) || 0));
-            const total = subtotal - (subtotal * (disc / 100));
-            const cash = parseFloat(document.getElementById("cash-input").value) || 0;
-            const change = cash > total ? cash - total : 0;
-
-            document.getElementById("summary-subtotal").innerText = formatRupiah(subtotal);
-            document.getElementById("summary-total").innerText = formatRupiah(total);
-            document.getElementById("change-display").innerText = formatRupiah(change);
-            return { subtotal, total, cash, change, disc };
-        }
-
         function renderCart() {
             const container = document.getElementById("cart-items");
             container.innerHTML = "";
@@ -444,8 +486,7 @@
                         <button onclick="updateCartQty(${item.product.id}, -1)" class="w-5 h-5 font-bold text-slate-500 hover:text-rose-600">-</button>
                         <span class="w-5 text-center font-mono font-bold text-slate-800">${item.quantity}</span>
                         <button onclick="updateCartQty(${item.product.id}, 1)" class="w-5 h-5 font-bold text-slate-500 hover:text-accentblue">+</button>
-                    </div>
-                `;
+                    </div>`;
                 container.appendChild(row);
             });
             calculateTotals();
@@ -454,26 +495,18 @@
         function processCheckout() {
             if (cart.length === 0) return alert("Pilih menu terlebih dahulu!");
             const data = calculateTotals();
-            if (data.cash < data.total) return alert("Uang tunai pembayaran tidak cukup!");
+            if (data.cash < data.total) return alert("Uang pembayaran tidak cukup!");
 
             const invoiceId = "BJK-" + Date.now().toString().slice(-6);
             activeCheckoutData = {
-                invoice: invoiceId,
-                date: new Date().toLocaleString('id-ID'),
-                items: [...cart],
-                subtotal: data.subtotal,
-                discount: data.disc,
-                total: data.total,
-                cash: data.cash,
-                change: data.change
+                invoice: invoiceId, date: new Date().toLocaleString('id-ID'), items: [...cart],
+                subtotal: data.subtotal, discount: data.disc, total: data.total, cash: data.cash, change: data.change, method: data.method
             };
 
+            // Masukkan data metode ke dalam jurnal keuangan
             financialLogs.unshift({
-                id: Date.now(),
-                time: new Date().toLocaleTimeString('id-ID'),
-                desc: `Penjualan Kasir (${invoiceId})`,
-                type: 'Pemasukan',
-                amount: data.total
+                id: Date.now(), time: new Date().toLocaleTimeString('id-ID'),
+                desc: `Penjualan Kasir (${invoiceId})`, type: 'Pemasukan', method: data.method, amount: data.total
             });
             syncStorage();
 
@@ -485,11 +518,10 @@
 
             manifestDiv.innerHTML = `
                 <div class="text-center font-bold text-slate-900 mb-1 border-b border-slate-200 pb-1">BJEK POS RECEIPT</div>
-                <div class="text-[10px] text-slate-500 mb-2">Inv: ${activeCheckoutData.invoice}<br>Waktu: ${activeCheckoutData.date}</div>
+                <div class="text-[10px] text-slate-500 mb-2">Inv: ${activeCheckoutData.invoice}<br>Metode: ${activeCheckoutData.method}<br>Waktu: ${activeCheckoutData.date}</div>
                 <div class="space-y-1 border-b border-dashed border-slate-300 pb-2 mb-2 text-[11px]">${itemsText}</div>
-                <div class="flex justify-between text-slate-500"><span>Diskon:</span><span>${activeCheckoutData.discount}%</span></div>
                 <div class="flex justify-between font-bold text-accentblue"><span>Total Akhir:</span><span>${formatRupiah(activeCheckoutData.total)}</span></div>
-                <div class="flex justify-between font-bold text-emerald-600 pt-1"><span>Kembalian:</span><span>${formatRupiah(activeCheckoutData.change)}</span></div>
+                <div class="flex justify-between font-bold text-emerald-600 pt-1"><span>Bayar (${activeCheckoutData.method}):</span><span>${formatRupiah(activeCheckoutData.cash)}</span></div>
             `;
 
             const modal = document.getElementById("invoice-modal");
@@ -506,23 +538,19 @@
         function resetTransaction() {
             document.getElementById("cash-input").value = "";
             document.getElementById("discount-input").value = "0";
+            document.getElementById("payment-method").value = "Cash";
+            handlePaymentMethodChange();
             clearCart();
         }
 
-        // === EKSPOR NOTA (WHATSAPP & PRINTER WINDOW) ===
         function exportToWhatsApp() {
             if (!activeCheckoutData) return;
             let msg = `*BJEK POS SYSTEM - NOTA BELANJA*%0A`;
-            msg += `Invoice: \`${activeCheckoutData.invoice}\`%0A`;
-            msg += `Tanggal: ${activeCheckoutData.date}%0A`;
+            msg += `Invoice: \`${activeCheckoutData.invoice}\` (${activeCheckoutData.method})%0A`;
             msg += `============================%0A`;
             activeCheckoutData.items.forEach(i => { msg += `- *${i.product.name}* (x${i.quantity}) : ${formatRupiah(i.product.price * i.quantity)}%0A`; });
             msg += `============================%0A`;
-            msg += `*Subtotal:* ${formatRupiah(activeCheckoutData.subtotal)}%0A`;
-            msg += `*Diskon:* ${activeCheckoutData.discount}%25%0A`;
             msg += `*TOTAL AKHIR:* *${formatRupiah(activeCheckoutData.total)}*%0A`;
-            msg += `*Tunai:* ${formatRupiah(activeCheckoutData.cash)}%0A`;
-            msg += `*Kembalian:* ${formatRupiah(activeCheckoutData.change)}%0A%0A`;
             msg += `_Terima kasih telah berbelanja!_`;
             window.open(`https://wa.me/?text=${msg}`, '_blank');
         }
@@ -536,19 +564,17 @@
             });
             printArea.innerHTML = `
                 <div style="text-align: center; font-family: monospace; font-size: 12px; color: black;">
-                    <h2 style="margin: 0;">BJEK KASIR</h2><hr style="border-top: 1px dashed black;">
-                    <div style="text-align: left;">Inv: ${activeCheckoutData.invoice}<br>Waktu: ${activeCheckoutData.date}</div>
+                    <h2>BJEK KASIR</h2><hr style="border-top: 1px dashed black;">
+                    <div style="text-align: left;">Inv: ${activeCheckoutData.invoice}<br>Metode: ${activeCheckoutData.method}<br>Waktu: ${activeCheckoutData.date}</div>
                     <table style="width: 100%; border-collapse: collapse;">${itemsHtml}</table><hr style="border-top: 1px dashed black;">
                     <table style="width: 100%;">
                         <tr><td>Total Akhir</td><td style="text-align: right; font-weight: bold;">${formatRupiah(activeCheckoutData.total)}</td></tr>
-                        <tr><td>Tunai</td><td style="text-align: right;">${formatRupiah(activeCheckoutData.cash)}</td></tr>
-                        <tr><td>Kembalian</td><td style="text-align: right;">${formatRupiah(activeCheckoutData.change)}</td></tr>
                     </table>
                 </div>`;
             window.print();
         }
 
-        // === ENGINE TAB 2: MANAGEMENT DAFTAR MENU ===
+        // === ENGINE MANAGEMENT MENU ===
         function renderManagementTable() {
             const tbody = document.getElementById("management-table-body");
             tbody.innerHTML = "";
@@ -573,43 +599,51 @@
             const price = parseFloat(document.getElementById("form-price").value) || 0;
             const category = document.getElementById("form-category").value;
             const image = document.getElementById("form-image").value || "";
-
             products.push({ id: Date.now(), name, price, category, image });
-            syncStorage();
-            document.getElementById("add-product-form").reset();
-            renderManagementTable();
-            alert(`Sukses menambahkan "${name}"!`);
+            syncStorage(); document.getElementById("add-product-form").reset();
+            renderManagementTable(); alert(`Sukses menambahkan "${name}"!`);
         }
 
         function handleDeleteProduct(productId) {
             if (!confirm("Hapus item menu ini?")) return;
-            products = products.filter(p => p.id !== productId);
-            syncStorage();
-            renderManagementTable();
+            products = products.filter(p => p.id !== productId); syncStorage(); renderManagementTable();
         }
 
-        // === ENGINE TAB 3: BUKU LAPORAN KEUANGAN ===
+        // === ENGINE LAPORAN (PEMISAHAN DETIL NOMINAL) ===
         function renderFinancialView() {
             let totalIncome = 0, totalExpense = 0;
+            let cashIncome = 0, qrisIncome = 0;
+
             const tbody = document.getElementById("financial-table-body");
             tbody.innerHTML = "";
+            
             financialLogs.forEach(log => {
-                if (log.type === 'Pemasukan') totalIncome += log.amount;
+                if (log.type === 'Pemasukan') {
+                    totalIncome += log.amount;
+                    if (log.method === 'QRIS') { qrisIncome += log.amount; } 
+                    else { cashIncome += log.amount; } // Default ke cash jika log lama belum bermetode
+                }
                 if (log.type === 'Pengeluaran') totalExpense += log.amount;
 
                 const tr = document.createElement("tr");
                 tr.className = "border-b border-slate-200 hover:bg-slate-50/80 transition";
                 const badgeClass = log.type === 'Pemasukan' ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50';
+                const methodLabel = log.type === 'Pemasukan' ? (log.method || 'Cash') : '-';
+
                 tr.innerHTML = `
                     <td class="p-2.5 text-slate-400">${log.time}</td>
                     <td class="p-2.5 font-sans text-slate-800">${log.desc}</td>
-                    <td class="p-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] ${badgeClass}">${log.type}</span></td>
+                    <td class="p-2.5 font-sans font-bold text-slate-600">${methodLabel}</td>
                     <td class="p-2.5 text-right font-bold ${log.type === 'Pemasukan' ? 'text-emerald-600' : 'text-rose-600'}">${log.type === 'Pemasukan' ? '+' : '-'} ${formatRupiah(log.amount)}</td>`;
                 tbody.appendChild(tr);
             });
+            
             const net = totalIncome - totalExpense;
             document.getElementById("report-income").innerText = formatRupiah(totalIncome);
+            document.getElementById("report-cash-income").innerText = formatRupiah(cashIncome);
+            document.getElementById("report-qris-income").innerText = formatRupiah(qrisIncome);
             document.getElementById("report-expense").innerText = formatRupiah(totalExpense);
+            
             document.getElementById("report-net").innerText = formatRupiah(net);
             document.getElementById("report-net").className = net < 0 ? "text-xl font-bold font-mono text-rose-600 mt-1" : "text-xl font-bold font-mono text-accentblue mt-1";
         }
@@ -619,11 +653,8 @@
             const desc = document.getElementById("exp-desc").value;
             const amount = parseFloat(document.getElementById("exp-amount").value) || 0;
             financialLogs.unshift({ id: Date.now(), time: new Date().toLocaleTimeString('id-ID'), desc, type: 'Pengeluaran', amount });
-            syncStorage();
-            document.getElementById("exp-desc").value = "";
-            document.getElementById("exp-amount").value = "";
-            renderFinancialView();
-            alert("Pengeluaran berhasil dicatat!");
+            syncStorage(); document.getElementById("exp-desc").value = ""; document.getElementById("exp-amount").value = "";
+            renderFinancialView(); alert("Pengeluaran berhasil dicatat!");
         }
 
         function clearFinancialLogs() {
